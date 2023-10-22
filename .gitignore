@@ -2,7 +2,7 @@
 
 # Specific to this project layout:
 build-*/
-plots-*/
+plots*/
 data-*/
 
 # Byte-compiled / optimized / DLL files

@@ -3,14 +3,11 @@ from argparse import ArgumentParser, BooleanOptionalAction
 from pathlib import Path
 from typing import Any, Dict, Iterable, Optional
 
-import censusdis.data as ced
 import pandas as pd
 import xgboost
 import yaml
-from censusdis.datasets import ACS5
-from impactchart.model import XGBoostImpactModel
-from matplotlib.ticker import FuncFormatter, PercentFormatter
 from scipy import stats
+from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import RandomizedSearchCV
 
 import evlcharts.variables as var
@@ -19,11 +16,10 @@ logger = logging.getLogger(__name__)
 
 
 def optimize(
-    year: int,
     df: pd.DataFrame,
     x_cols: Iterable[str],
     y_col: str,
-    w_cols: Optional[Iterable[str]] = None,
+    w_col: Optional[str] = None,
 ) -> Dict[str, Any]:
     reg_xgb = xgboost.XGBRegressor()
 
@@ -53,65 +49,38 @@ def optimize(
     result = {
         "params": reg.best_params_,
         "target": float(reg.best_score_),
+        "score": float(reg.best_estimator_.score(X, y)),
     }
 
     result["params"]["learning_rate"] = float(result["params"]["learning_rate"])
-
-    # Build impact charts.
-
-    all_variables = pd.concat(
-        [
-            ced.variables.all_variables(
-                ACS5, year, var.GROUP_HISPANIC_OR_LATINO_ORIGIN_BY_RACE
-            ),
-            ced.variables.all_variables(
-                ACS5, year, var.GROUP_MEDIAN_HOUSEHOLD_INCOME_BY_TENURE
-            ),
-        ]
-    )
-
-    impact_model = XGBoostImpactModel(estimator_kwargs=result["params"])
-
-    impact_model.fit(X, y)
-
-    impact_charts = impact_model.impact_charts(
-        X,
-        X.columns,
-        subplots_kwargs=dict(
-            figsize=(12, 8),
-        ),
-    )
-
-    dollar_formatter = FuncFormatter(
-        lambda d, pos: f"\\${d:,.0f}" if d >= 0 else f"(\\${-d:,.0f})"
-    )
-
-    for feature, (fig, ax) in impact_charts.items():
-        feature_base = feature.replace("frac_", "")
-
-        label = all_variables[all_variables["VARIABLE"] == feature_base]["LABEL"].iloc[
-            0
-        ]
-        label = label.split("!!")[-1]
-
-        impacted = y_col.replace("_", " ").title()
-
-        ax.grid()
-        ax.set_title(f"Impact of {label} on {impacted}")
-        ax.set_xlabel(label)
-        ax.set_ylabel("Impact")
-
-        col_is_fractional = feature.startswith("frac_")
-
-        if col_is_fractional:
-            ax.xaxis.set_major_formatter(PercentFormatter(1.0, decimals=0))
-        else:
-            ax.xaxis.set_major_formatter(dollar_formatter)
-
-        logger.info(f"Saving impact chart for {feature}.")
-        fig.savefig(Path("/var/tmp") / f"{feature}.jpg")
+    result["params"]["subsample"] = float(result["params"]["subsample"])
 
     return result
+
+def linreg(
+    df: pd.DataFrame,
+    x_cols: Iterable[str],
+    y_col: str,
+    w_col: Optional[str] = None,
+) -> Dict[str, Any]:
+
+    regressor = LinearRegression()
+
+    if w_col is None:
+        model = regressor.fit(df[x_cols], df[y_col])
+        score = regressor.score(df[x_cols], df[y_col])
+    else:
+        model = regressor.fit(df[x_cols], df[y_col], sample_weight=df[w_col])
+        score = regressor.score(df[x_cols], df[y_col], sample_weight=df[w_col])
+
+    coefficients = model.coef_.tolist()
+    intercept = model.intercept_
+
+    return {
+        "coefficients": coefficients,
+        "intercept": float(intercept),
+        "score": float(score)
+    }
 
 
 def main():
@@ -128,9 +97,7 @@ def main():
     parser.add_argument(
         "-o", "--output", required=True, type=str, help="Output yaml file."
     )
-    parser.add_argument(
-        "-v", "--vintage", default=2018, type=int, help="Year to get data."
-    )
+
     parser.add_argument("data", help="Input data file. Typically from select.py.")
 
     args = parser.parse_args()
@@ -147,14 +114,7 @@ def main():
         data_path, header=0, dtype={"STATE": str, "COUNTY": str, "TRACT": str}
     )
 
-    x_cols = [
-        var.MEDIAN_HOUSEHOLD_INCOME_FOR_RENTERS,
-    ] + [
-        f"frac_{variable}"
-        for variable in df.columns
-        if variable.startswith(var.GROUP_HISPANIC_OR_LATINO_ORIGIN_BY_RACE)
-        and variable != var.TOTAL_POPULATION
-    ]
+    x_cols = var.x_cols(df)
 
     y_col = "filing_rate"
 
@@ -169,13 +129,22 @@ def main():
     if args.dry_run:
         return
 
-    year = args.vintage
-
-    params = optimize(year, df, x_cols, y_col)
+    xgb_params = optimize(df, x_cols, y_col)
 
     logger.info(f"Writing to output file `{output_path}`")
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
+
+    logger.info(f"All X shape: {df.shape}")
+    df = df.dropna(subset=x_cols)
+    logger.info(f"Dropna X shape: {df.shape}")
+
+    linreg_params = linreg(df, x_cols, y_col)
+
+    params = {
+        "linreg": linreg_params,
+        "xgb": xgb_params,
+    }
     with open(output_path, "w") as f:
         yaml.dump(params, f, sort_keys=True)
 

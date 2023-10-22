@@ -27,16 +27,22 @@ COUNTY_DATA := $(WORKING_DATA_DIR)/$(STATE)-$(COUNTY).csv
 PARAMS_DIR := $(WORKING_DIR)/params/xgb
 PARAMS_YAML := $(PARAMS_DIR)/xgb-params-$(STATE)-$(COUNTY).yaml
 
+# Plots
+PLOT_DIR := ./plots
+COUNTY_PLOT_DIR = $(PLOT_DIR)/$(STATE)-$(COUNTY)
 
 .PHONY: all clean
 
-all: $(PARAMS_YAML)
+all: $(COUNTY_PLOT_DIR)
 
 clean:
-	rm -rf $(WORKING_DIR)
+	rm -rf $(WORKING_DIR) $(PLOT_DIR)
 
 $(COUNTY_DATA): $(JOINED_DATA)
 	$(PYTHON) -m evlcharts.select -s $(STATE) -c $(COUNTY) -o $@ $<
 
 $(PARAMS_YAML): $(COUNTY_DATA)
 	$(PYTHON) -m evlcharts.optimize --log $(LOGLEVEL) -o $@ $<
+
+$(COUNTY_PLOT_DIR): $(COUNTY_DATA) $(PARAMS_YAML)
+	$(PYTHON) -m evlcharts.plot --log $(LOGLEVEL) -o $@ -p $(PARAMS_YAML) $(COUNTY_DATA)
