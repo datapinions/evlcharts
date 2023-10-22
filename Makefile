@@ -45,4 +45,6 @@ $(PARAMS_YAML): $(COUNTY_DATA)
 	$(PYTHON) -m evlcharts.optimize --log $(LOGLEVEL) -o $@ $<
 
 $(COUNTY_PLOT_DIR): $(COUNTY_DATA) $(PARAMS_YAML)
-	$(PYTHON) -m evlcharts.plot --log $(LOGLEVEL) -o $@ -p $(PARAMS_YAML) $(COUNTY_DATA)
+	$(PYTHON) -m evlcharts.plot --log $(LOGLEVEL) -o $@ -p $(PARAMS_YAML) \
+	-s $(STATE) -c $(COUNTY) \
+	$(COUNTY_DATA)

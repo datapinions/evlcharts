@@ -14,6 +14,7 @@ from matplotlib.ticker import FuncFormatter, PercentFormatter
 
 import evlcharts.variables as var
 import censusdis.data as ced
+from censusdis.states import NAMES_FROM_IDS
 
 
 logger = logging.getLogger(__name__)
@@ -62,6 +63,7 @@ def plot_impact_chars(
         year,
         params,
         output_path: Path,
+        county_name: str,
         *,
         linreg: bool = False,
         linreg_coefs: Optional[Iterable[float]] = None,
@@ -120,12 +122,15 @@ def plot_impact_chars(
         label = all_variables[all_variables["VARIABLE"] == feature_base]["LABEL"].iloc[
             0
         ]
-        label = label.split("!!")[-1]
+        if feature_base == var.MEDIAN_HOUSEHOLD_INCOME_FOR_RENTERS:
+            label = 'Median Household Income for Renters'
+        else:
+            label = label.split("!!")[-1]
 
         impacted = y_col.replace("_", " ").title()
 
         ax.grid()
-        ax.set_title(f"Impact of {label} on {impacted}")
+        ax.set_title(f"Impact of {label} on {impacted}\n{county_name}")
         ax.set_xlabel(label)
         ax.set_ylabel("Impact")
 
@@ -178,9 +183,25 @@ def main():
         type=str,
         help="Model parameters (from optimize.py).",
     )
+    parser.add_argument("-s", "--state", type=str, required=True)
+    parser.add_argument("-c", "--county", type=str, required=True)
     parser.add_argument("data", help="Input data file. Typically from select.py.")
 
     args = parser.parse_args()
+
+    # Get names for state and county, which are passed in by FIPS.
+    state = NAMES_FROM_IDS[args.state]
+
+    df_county = ced.download(
+        ACS5,
+        args.vintage,
+
+        ['NAME'],
+
+        state=args.state,
+        county=args.county
+    )
+    county_name = df_county['NAME'].iloc[0]
 
     level = getattr(logging, args.log)
 
@@ -216,6 +237,7 @@ def main():
     output_path.mkdir(parents=True, exist_ok=True)
     plot_impact_chars(
         df, x_cols, y_col, year, xgb_params, output_path,
+        county_name=county_name,
         linreg=False,
         linreg_coefs=linreg_coefs, linreg_intercept=linreg_intercept
     )
