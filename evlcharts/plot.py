@@ -183,14 +183,22 @@ def main():
         type=str,
         help="Model parameters (from optimize.py).",
     )
-    parser.add_argument("-s", "--state", type=str, required=True)
-    parser.add_argument("-c", "--county", type=str, required=True)
+
+    parser.add_argument(
+        "--fips",
+        type=str,
+        help="Provide this as SSCCC for the state and county."
+    )
+
     parser.add_argument("data", help="Input data file. Typically from select.py.")
 
     args = parser.parse_args()
 
+    state_fips = args.fips[:2]
+    county_fips = args.fips[2:]
+
     # Get names for state and county, which are passed in by FIPS.
-    state = NAMES_FROM_IDS[args.state]
+    state = NAMES_FROM_IDS[state_fips]
 
     df_county = ced.download(
         ACS5,
@@ -198,8 +206,8 @@ def main():
 
         ['NAME'],
 
-        state=args.state,
-        county=args.county
+        state=state_fips,
+        county=county_fips
     )
     county_name = df_county['NAME'].iloc[0]
 
@@ -242,6 +250,6 @@ def main():
         linreg_coefs=linreg_coefs, linreg_intercept=linreg_intercept
     )
 
-
 if __name__ == "__main__":
     main()
+

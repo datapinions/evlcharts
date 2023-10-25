@@ -93,6 +93,13 @@ def main():
         default="WARNING",
     )
 
+    parser.add_argument(
+        "--fips",
+        type=str,
+        required=True,
+        help="Provide this as SSCCC for the state and county."
+    )
+
     parser.add_argument("--dry-run", action=BooleanOptionalAction)
     parser.add_argument(
         "-o", "--output", required=True, type=str, help="Output yaml file."
@@ -142,6 +149,7 @@ def main():
     linreg_params = linreg(df, x_cols, y_col)
 
     params = {
+        "fips": args.fips,
         "linreg": linreg_params,
         "xgb": xgb_params,
     }

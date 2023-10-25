@@ -2,11 +2,19 @@
 PYTHON = python3.11
 LOGLEVEL = INFO
 
-# May want to override these to run for other counties.
-# Georgia
-STATE := 13
-# DeKalb
-COUNTY := 089
+# Five digit SSCCC state and county fips codes.
+FIPS := \
+48201 12086 32003 36047 42101 26163 12011 36081 24031 24005 \
+48029 37119 25017 37183 12071 24033 26125 48141 36005 12099 \
+36061 12057 13121 25009 25027 42091 39035 15003 12095 25025 \
+25021 26099 24003 12127 13067 32031 25005 37081 12117 48215 \
+12031 25013 48453 48491 53061 55079 33011 42045 42017 25023 \
+\
+12021 37067 21067 29189 48245 41067 12115 48303 49049 48167 \
+49035 44007 53063 48355 45045 55133 12083 27053 12081 26049 \
+26081 39049 48339 24021 12033 48061 48479 12009 24025 13089 \
+13051 24027 33015 35049 36085 39155 23005 34023 48039 12053 \
+12111 42029 12101 42003 42129 26161 13135 10003 48423 12091
 
 
 # The data directory
@@ -20,31 +28,40 @@ JOINED_DATA := $(DATA_DIR)/evl_census.csv
 WORKING_DIR := ./working
 WORKING_DATA_DIR := $(WORKING_DIR)/data
 
-# Just the desired county.
-COUNTY_DATA := $(WORKING_DATA_DIR)/$(STATE)-$(COUNTY).csv
+# County level data files.
+COUNTY_DATA := $(FIPS:%=$(WORKING_DATA_DIR)/%.csv)
 
 # Parameters
 PARAMS_DIR := $(WORKING_DIR)/params/xgb
-PARAMS_YAML := $(PARAMS_DIR)/xgb-params-$(STATE)-$(COUNTY).yaml
+PARAMS_YAML := $(FIPS:%=$(PARAMS_DIR)/xgb-params-%.yaml)
+
+# File listing the FIPS codes with the top scores.
+TOP_SCORING := $(PARAMS_DIR)/top_scores.txt
 
 # Plots
 PLOT_DIR := ./plots
-COUNTY_PLOT_DIR = $(PLOT_DIR)/$(STATE)-$(COUNTY)
+COUNTY_PLOT_DIRS = $(FIPS:%=$(PLOT_DIR)/%)
 
-.PHONY: all clean
+.PRECIOUS: $(PARAMS_YAML) $(COUNTY_DATA)
 
-all: $(COUNTY_PLOT_DIR)
+.PHONY: all top clean
+
+all: $(COUNTY_PLOT_DIRS) $(TOP_SCORING)
 
 clean:
 	rm -rf $(WORKING_DIR) $(PLOT_DIR)
 
-$(COUNTY_DATA): $(JOINED_DATA)
-	$(PYTHON) -m evlcharts.select -s $(STATE) -c $(COUNTY) -o $@ $<
+top: $(TOP_SCORING)
 
-$(PARAMS_YAML): $(COUNTY_DATA)
-	$(PYTHON) -m evlcharts.optimize --log $(LOGLEVEL) -o $@ $<
+$(WORKING_DATA_DIR)/%.csv: $(JOINED_DATA)
+	$(PYTHON) -m evlcharts.select --fips $(basename $(@F)) -o $(WORKING_DATA_DIR) $<
 
-$(COUNTY_PLOT_DIR): $(COUNTY_DATA) $(PARAMS_YAML)
-	$(PYTHON) -m evlcharts.plot --log $(LOGLEVEL) -o $@ -p $(PARAMS_YAML) \
-	-s $(STATE) -c $(COUNTY) \
-	$(COUNTY_DATA)
+$(PARAMS_DIR)/xgb-params-%.yaml: $(WORKING_DATA_DIR)/%.csv
+	$(PYTHON) -m evlcharts.optimize --log $(LOGLEVEL) --fips $(word 3,$(subst -, ,$(basename $(@F)))) -o $@ $<
+
+$(TOP_SCORING): $(PARAMS_YAML)
+	$(PYTHON) -m evlcharts.topscore --log $(LOGLEVEL) -o $@ $(PARAMS_YAML)
+
+$(PLOT_DIR)/%: $(WORKING_DATA_DIR)/%.csv $(PARAMS_DIR)/xgb-params-%.yaml
+	$(PYTHON) -m evlcharts.plot --log $(LOGLEVEL) -o $@ -p $(word 2,$^) --fips $(basename $(notdir $(word 1,$^))) $(word 1,$^)
+	touch $@

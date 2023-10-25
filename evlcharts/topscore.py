@@ -1,8 +1,10 @@
 import logging
 from argparse import ArgumentParser
 from pathlib import Path
+import yaml
 
 import pandas as pd
+
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +28,7 @@ def main():
 
     parser.add_argument("-o", "--output", required=True, type=str, help="Output file.")
 
-    parser.add_argument("input", help="Input file. The output of join.py.")
+    parser.add_argument("params", nargs="+", help="Input parameter files")
 
     args = parser.parse_args()
 
@@ -35,26 +37,29 @@ def main():
     logging.basicConfig(level=level)
     logger.setLevel(level)
 
-    input_path = Path(args.input)
     output_path = Path(args.output)
 
-    logger.info(f"Reading input file `{input_path}`")
+    scores = []
 
-    df = pd.read_csv(
-        input_path, header=0, dtype={"STATE": str, "COUNTY": str, "TRACT": str}
-    )
+    for file in args.params:
+        input_path = Path(file)
+        logger.info(f"Reading input parameter file {input_path}")
 
-    output_path.mkdir(parents=True, exist_ok=True)
+        with open(file) as f:
+            result = yaml.full_load(f)
 
-    for fips in args.fips:
-        state = fips[:2]
-        county = fips[2:]
+        fips = result["fips"]
+        xgb_score = result["xgb"]["score"]
 
-        df_county = df[(df["STATE"] == state) & (df["COUNTY"] == county)]
+        scores.append({"FIPS": fips, "SCORE": xgb_score})
 
-        logger.info(f"Writing to output file `{output_path}`")
-        df_county.to_csv(output_path / f'{fips}.csv', index=False)
+    df_scores = pd.DataFrame(scores)
+
+    df_scores.sort_values(by="SCORE", ascending=False, inplace=True)
+
+    df_scores.to_csv(output_path, index=False)
 
 
 if __name__ == "__main__":
     main()
+
