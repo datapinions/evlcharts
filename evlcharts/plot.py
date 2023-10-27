@@ -75,17 +75,6 @@ def plot_impact_chars(
     if linreg:
         reg_linreg = _linreg_from_coefficients(linreg_coefs, linreg_intercept)
 
-    all_variables = pd.concat(
-        [
-            ced.variables.all_variables(
-                ACS5, year, var.GROUP_HISPANIC_OR_LATINO_ORIGIN_BY_RACE
-            ),
-            ced.variables.all_variables(
-                ACS5, year, var.GROUP_MEDIAN_HOUSEHOLD_INCOME_BY_TENURE
-            ),
-        ]
-    )
-
     k = 50
     seed = 0x3423CDF1
 
@@ -97,6 +86,9 @@ def plot_impact_chars(
         subplots_kwargs=dict(
             figsize=(12, 8),
         ),
+        feature_names=var.FEATURE_NAMES,
+        y_name=y_col.replace("_", " ").title(),
+        subtitle=county_name,
     )
 
     dollar_formatter = FuncFormatter(
@@ -117,23 +109,6 @@ def plot_impact_chars(
 
             ax = df_one_feature.plot(feature, 'impact', color="orange", ax=ax)
 
-        feature_base = feature.replace("frac_", "")
-
-        label = all_variables[all_variables["VARIABLE"] == feature_base]["LABEL"].iloc[
-            0
-        ]
-        if feature_base == var.MEDIAN_HOUSEHOLD_INCOME_FOR_RENTERS:
-            label = 'Median Household Income for Renters'
-        else:
-            label = label.split("!!")[-1]
-
-        impacted = y_col.replace("_", " ").title()
-
-        ax.grid()
-        ax.set_title(f"Impact of {label} on {impacted}\n{county_name}")
-        ax.set_xlabel(label)
-        ax.set_ylabel("Impact")
-
         plot_id = _plot_id(feature, k, len(df.index), seed)
         ax.text(
             0.99,
@@ -153,10 +128,12 @@ def plot_impact_chars(
             ax.set_xlim(-0.05, 1.05)
         else:
             ax.xaxis.set_major_formatter(dollar_formatter)
-            ax.set_xlim(-5_000, 155_000)
+            ax.set_xlim(-5_000, max(10_000, df_one_feature[feature].max()) * 1.05)
 
-        logger.info(f"Saving impact chart for {feature}.")
-        fig.savefig(output_path / f"{feature}.jpg")
+        feature_name = var.FEATURE_NAMES[feature]
+
+        logger.info(f"Saving impact chart for {feature_name}.")
+        fig.savefig(output_path / f"{feature_name.replace(' ', '-')}.jpg")
 
 
 def main():
@@ -190,6 +167,12 @@ def main():
         help="Provide this as SSCCC for the state and county."
     )
 
+    parser.add_argument(
+        "--population", type=str, choices=['all', 'renters'],
+        default="renters", required=True,
+        help="What do we base the population metrics on?"
+    )
+
     parser.add_argument("data", help="Input data file. Typically from select.py.")
 
     args = parser.parse_args()
@@ -220,6 +203,8 @@ def main():
     output_path = Path(args.output)
     year = args.vintage
 
+    renters_only = args.population == 'renters'
+
     df = pd.read_csv(
         data_path, header=0, dtype={"STATE": str, "COUNTY": str, "TRACT": str}
     )
@@ -231,7 +216,7 @@ def main():
     linreg_coefs = result["linreg"]["coefficients"]
     linreg_intercept = result["linreg"]["intercept"]
 
-    x_cols = var.x_cols(df)
+    x_cols = var.x_cols(df, renters_only)
     y_col = "filing_rate"
 
     df = df.dropna(subset=list(x_cols + [y_col]))
@@ -250,6 +235,6 @@ def main():
         linreg_coefs=linreg_coefs, linreg_intercept=linreg_intercept
     )
 
+
 if __name__ == "__main__":
     main()
-

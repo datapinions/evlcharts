@@ -105,6 +105,12 @@ def main():
         "-o", "--output", required=True, type=str, help="Output yaml file."
     )
 
+    parser.add_argument(
+        "--population", type=str, choices=['all', 'renters'],
+        default="renters", required=True,
+        help="What do we base the population metrics on?"
+    )
+
     parser.add_argument("data", help="Input data file. Typically from select.py.")
 
     args = parser.parse_args()
@@ -114,6 +120,8 @@ def main():
     logging.basicConfig(level=level)
     logger.setLevel(level)
 
+    renters_only = args.population == 'renters'
+
     data_path = Path(args.data)
     output_path = Path(args.output)
 
@@ -121,7 +129,7 @@ def main():
         data_path, header=0, dtype={"STATE": str, "COUNTY": str, "TRACT": str}
     )
 
-    x_cols = var.x_cols(df)
+    x_cols = var.x_cols(df, renters_only)
 
     y_col = "filing_rate"
 

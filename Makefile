@@ -2,6 +2,9 @@
 PYTHON = python3.11
 LOGLEVEL = INFO
 
+# Set to all or renters.
+POPULATION := renters
+
 # Five digit SSCCC state and county fips codes.
 
 # These are the ones with the most census tracts of data
@@ -41,14 +44,14 @@ WORKING_DATA_DIR := $(WORKING_DIR)/data
 COUNTY_DATA := $(FIPS:%=$(WORKING_DATA_DIR)/%.csv)
 
 # Parameters
-PARAMS_DIR := $(WORKING_DIR)/params/xgb
+PARAMS_DIR := $(WORKING_DIR)/$(POPULATION)/params/xgb
 PARAMS_YAML := $(FIPS:%=$(PARAMS_DIR)/xgb-params-%.yaml)
 
 # File listing the FIPS codes with the top scores.
-TOP_SCORING := $(PARAMS_DIR)/top_scores.txt
+TOP_SCORING := $(PARAMS_DIR)/top_scores-$(POPULATION).txt
 
 # Plots
-PLOT_DIR := ./plots
+PLOT_DIR := ./plots/$(POPULATION)
 COUNTY_PLOT_DIRS = $(FIPS:%=$(PLOT_DIR)/%)
 
 .PRECIOUS: $(PARAMS_YAML) $(COUNTY_DATA)
@@ -66,11 +69,11 @@ $(WORKING_DATA_DIR)/%.csv: $(JOINED_DATA)
 	$(PYTHON) -m evlcharts.select --fips $(basename $(@F)) -o $(WORKING_DATA_DIR) $<
 
 $(PARAMS_DIR)/xgb-params-%.yaml: $(WORKING_DATA_DIR)/%.csv
-	$(PYTHON) -m evlcharts.optimize --log $(LOGLEVEL) --fips $(word 3,$(subst -, ,$(basename $(@F)))) -o $@ $<
+	$(PYTHON) -m evlcharts.optimize --log $(LOGLEVEL) --population $(POPULATION) --fips $(word 3,$(subst -, ,$(basename $(@F)))) -o $@ $<
 
 $(TOP_SCORING): $(PARAMS_YAML)
 	$(PYTHON) -m evlcharts.topscore --log $(LOGLEVEL) -o $@ $(PARAMS_YAML)
 
 $(PLOT_DIR)/%: $(WORKING_DATA_DIR)/%.csv $(PARAMS_DIR)/xgb-params-%.yaml
-	$(PYTHON) -m evlcharts.plot --log $(LOGLEVEL) -o $@ -p $(word 2,$^) --fips $(basename $(notdir $(word 1,$^))) $(word 1,$^)
+	$(PYTHON) -m evlcharts.plot --log $(LOGLEVEL) --population $(POPULATION) -o $@ -p $(word 2,$^) --fips $(basename $(notdir $(word 1,$^))) $(word 1,$^)
 	touch $@
