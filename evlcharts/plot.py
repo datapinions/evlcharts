@@ -14,7 +14,6 @@ from matplotlib.ticker import FuncFormatter, PercentFormatter
 
 import evlcharts.variables as var
 import censusdis.data as ced
-from censusdis.states import NAMES_FROM_IDS
 
 
 logger = logging.getLogger(__name__)
@@ -216,7 +215,6 @@ def main():
 
     data_path = Path(args.data)
     output_path = Path(args.output)
-    year = args.vintage
 
     renters_only = args.population == "renters"
 
