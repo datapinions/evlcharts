@@ -1,7 +1,6 @@
 import logging
 from argparse import ArgumentParser
 from pathlib import Path
-import evlcharts.variables as var
 
 import pandas as pd
 
@@ -18,16 +17,26 @@ def main():
         default="WARNING",
     )
 
+    parser.add_argument("-i", "--input", help="Input file. The output of join.py.")
+
     parser.add_argument(
+        "-y",
+        "--y-column",
+        type=str,
+        choices=["filing_rate", "threatened_rate", "judgement_rate"],
+        default="filing_rate",
+        help="What variable are we trying to predict?",
+    )
+
+    parser.add_argument("-t", "--threshold", type=int, default=10)
+
+    parser.add_argument(
+        "-f",
         "--fips",
         type=str,
         nargs="+",
         help="Provide this as SSCCC for the state and county.",
     )
-
-    parser.add_argument("-o", "--output", required=True, type=str, help="Output file.")
-
-    parser.add_argument("input", help="Input file. The output of join.py.")
 
     args = parser.parse_args()
 
@@ -37,7 +46,6 @@ def main():
     logger.setLevel(level)
 
     input_path = Path(args.input)
-    output_path = Path(args.output)
 
     logger.info(f"Reading input file `{input_path}`")
 
@@ -45,23 +53,24 @@ def main():
         input_path, header=0, dtype={"STATE": str, "COUNTY": str, "TRACT": str}
     )
 
-    output_path.mkdir(parents=True, exist_ok=True)
+    good_fips = []
 
     for fips in args.fips:
         state = fips[:2]
         county = fips[2:]
 
-        # There are a handful of outliers where median income is
-        # over $250,000. The Census Bureau codes these as 250,001.
-        # We filter them out.
         df_county = df[
             (df["STATE"] == state)
             & (df["COUNTY"] == county)
-            & (df[var.MEDIAN_HOUSEHOLD_INCOME_FOR_RENTERS] <= 250_000)
+            & ~df[args.y_column].isna()
         ]
 
-        logger.info(f"Writing to output file `{output_path}`")
-        df_county.to_csv(output_path / f"{fips}.csv", index=False)
+        if len(df_county.index) < args.threshold:
+            logger.info(f"Less than 10 rows for county fips {fips}")
+        else:
+            good_fips.append(fips)
+
+    print(" ".join(good_fips))
 
 
 if __name__ == "__main__":
