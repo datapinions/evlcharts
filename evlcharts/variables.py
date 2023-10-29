@@ -22,7 +22,7 @@ TENURE_BY_RACE_GROUPS = [
     GROUP_TENURE_WHITE,
     GROUP_TENURE_BLACK,
     GROUP_TENURE_ASIAN,
-    GROUP_TENURE_HISPANIC_LATINO
+    GROUP_TENURE_HISPANIC_LATINO,
 ]
 
 # From income by tenure group https://api.census.gov/data/2018/acs/acs5/groups/B25119.html
@@ -32,39 +32,39 @@ MEDIAN_HOUSEHOLD_INCOME_FOR_RENTERS = "B25119_003E"
 
 # Names of all of the features to use in labels on plots.
 FEATURE_NAMES = {
-    'frac_B03002_003E': 'White Alone',
-    'frac_B03002_004E': 'Black Alone',
-    'frac_B03002_005E': 'American Indian or Alaskan Native Alone',
-    'frac_B03002_006E': 'Asian Alone',
-    'frac_B03002_007E': 'Native Hawaiian or Other Pacific Islander Alone',
-    'frac_B03002_008E': 'Some Other Race Alone',
-    'frac_B03002_010E': 'Two races Including Some Other Race',
-    'frac_B03002_011E': 'Two races Excluding Some Other Race, or Three or More Races',
-    'frac_B03002_012E': 'Hispanic or Latino of Any Race',
-
-    'frac_B25003A_003E': 'White Alone',
-    'frac_B25003B_003E': 'Black Alone',
-    'frac_B25003C_003E': 'American Indian or Alaskan Native Alone',
-    'frac_B25003D_003E': 'Asian Alone',
-    'frac_B25003E_003E': 'Native Hawaiian or Other Pacific Islander Alone',
-    'frac_B25003F_003E': 'Some Other Race Alone',
-    'frac_B25003G_003E': 'Two races Including Some Other Race',
-    'frac_B25003H_003E': 'Two races Excluding Some Other Race, or Three or More Races',
-    'frac_B25003I_003E': 'Hispanic or Latino of any Race',
-
-    MEDIAN_HOUSEHOLD_INCOME_FOR_RENTERS: 'Median Household Income for Renters',
+    "frac_B03002_003E": "White Alone as Percentage of Overall Population",
+    "frac_B03002_004E": "Black Alone as Percentage of Overall Population",
+    "frac_B03002_005E": "American Indian or Alaskan Native Alone as Percentage of Overall Population",
+    "frac_B03002_006E": "Asian Alone as Percentage of Overall Population",
+    "frac_B03002_007E": "Native Hawaiian or Other Pacific Islander Alone as Percentage of Overall Population",
+    "frac_B03002_008E": "Some Other Race Alone as Percentage of Overall Population",
+    "frac_B03002_010E": "Two races Including Some Other Race as Percentage of Overall Population",
+    "frac_B03002_011E": "Two races Excluding Some Other Race, or Three or More Races "
+    "as Percentage of Overall Population",
+    "frac_B03002_012E": "Hispanic or Latino of Any Race as Percentage of Overall Population",
+    "frac_B25003A_003E": "White Alone as Percentage of Renters",
+    "frac_B25003B_003E": "Black Alone as Percentage of Renters",
+    "frac_B25003C_003E": "American Indian or Alaskan Native Alone as Percentage of Renters",
+    "frac_B25003D_003E": "Asian Alone as Percentage of Renters",
+    "frac_B25003E_003E": "Native Hawaiian or Other Pacific Islander Alone as Percentage of Renters",
+    "frac_B25003F_003E": "Some Other Race Alone as Percentage of Renters",
+    "frac_B25003G_003E": "Two races Including Some Other Race as Percentage of Renters",
+    "frac_B25003H_003E": "Two races Excluding Some Other Race, or Three or More Races as Percentage of Renters",
+    "frac_B25003I_003E": "Hispanic or Latino of any Race as Percentage of Renters",
+    MEDIAN_HOUSEHOLD_INCOME_FOR_RENTERS: "Median Household Income for Renters",
 }
+
 
 def x_cols(df: pd.DataFrame, renters_only: bool) -> List[str]:
     if renters_only:
         cols = [
-                   MEDIAN_HOUSEHOLD_INCOME_FOR_RENTERS,
-               ] + [
-                   f"frac_{variable}"
-                   for variable in  df.columns
-                   if variable.startswith(GROUP_TENURE_PREFIX)
-                      and variable != VARIABLE_TOTAL_RENTERS
-               ]
+            MEDIAN_HOUSEHOLD_INCOME_FOR_RENTERS,
+        ] + [
+            f"frac_{variable}"
+            for variable in df.columns
+            if variable.startswith(GROUP_TENURE_PREFIX)
+            and variable != VARIABLE_TOTAL_RENTERS
+        ]
     else:
         cols = [
             MEDIAN_HOUSEHOLD_INCOME_FOR_RENTERS,

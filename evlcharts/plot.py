@@ -56,18 +56,18 @@ def _linreg_from_coefficients(coef, intercept):
 def _plot_id(feature, k, n, seed):
     return f"(f = {feature}; n = {n:,.0f}; k = {k}; s = {seed:08X})"
 
+
 def plot_impact_chars(
-        df,
-        x_cols,
-        y_col,
-        year,
-        params,
-        output_path: Path,
-        county_name: str,
-        *,
-        linreg: bool = False,
-        linreg_coefs: Optional[Iterable[float]] = None,
-        linreg_intercept: Optional[float] = None
+    df,
+    x_cols,
+    y_col,
+    params,
+    output_path: Path,
+    county_name: str,
+    *,
+    linreg: bool = False,
+    linreg_coefs: Optional[Iterable[float]] = None,
+    linreg_intercept: Optional[float] = None,
 ):
     X = df[list(x_cols)]
     y = df[y_col]
@@ -78,7 +78,9 @@ def plot_impact_chars(
     k = 50
     seed = 0x3423CDF1
 
-    impact_model = XGBoostImpactModel(ensemble_size=k, random_state=seed, estimator_kwargs=params)
+    impact_model = XGBoostImpactModel(
+        ensemble_size=k, random_state=seed, estimator_kwargs=params
+    )
     impact_model.fit(X, y)
     impact_charts = impact_model.impact_charts(
         X,
@@ -87,7 +89,7 @@ def plot_impact_chars(
             figsize=(12, 8),
         ),
         feature_names=var.FEATURE_NAMES,
-        y_name=y_col.replace("_", " ").title(),
+        y_name="Eviction " + y_col.replace("_", " ").title(),
         subtitle=county_name,
     )
 
@@ -96,7 +98,6 @@ def plot_impact_chars(
     )
 
     for feature, (fig, ax) in impact_charts.items():
-
         # Plot the linear line by plotting the output of the linear
         # model with all other features zeroed out so they have no
         # effect.
@@ -105,9 +106,18 @@ def plot_impact_chars(
         )
 
         if linreg:
-            df_one_feature['impact'] = reg_linreg.predict(df_one_feature) - linreg_intercept
+            df_one_feature["impact"] = reg_linreg.predict(df_one_feature)
 
-            ax = df_one_feature.plot(feature, 'impact', color="orange", ax=ax)
+            df_endpoints = pd.concat(
+                [
+                    df_one_feature.nsmallest(1, feature),
+                    df_one_feature.nlargest(1, feature),
+                ]
+            )
+
+            ax = df_endpoints.plot.line(
+                feature, "impact", color="orange", ax=ax, label="Linear Model"
+            )
 
         plot_id = _plot_id(feature, k, len(df.index), seed)
         ax.text(
@@ -129,6 +139,8 @@ def plot_impact_chars(
         else:
             ax.xaxis.set_major_formatter(dollar_formatter)
             ax.set_xlim(-5_000, max(10_000, df_one_feature[feature].max()) * 1.05)
+
+        ax.grid(visible=True)
 
         feature_name = var.FEATURE_NAMES[feature]
 
@@ -162,17 +174,28 @@ def main():
     )
 
     parser.add_argument(
-        "--fips",
-        type=str,
-        help="Provide this as SSCCC for the state and county."
+        "--fips", type=str, help="Provide this as SSCCC for the state and county."
     )
 
     parser.add_argument(
-        "--population", type=str, choices=['all', 'renters'],
-        default="renters", required=True,
-        help="What do we base the population metrics on?"
+        "-y",
+        "--y-column",
+        type=str,
+        choices=["filing_rate", "threatened_rate", "judgement_rate"],
+        default="filing_rate",
+        help="What variable are we trying to predict?",
     )
 
+    parser.add_argument(
+        "--population",
+        type=str,
+        choices=["all", "renters"],
+        default="renters",
+        required=True,
+        help="What do we base the population metrics on?",
+    )
+
+    parser.add_argument("--linreg", action="store_true")
     parser.add_argument("data", help="Input data file. Typically from select.py.")
 
     args = parser.parse_args()
@@ -180,19 +203,11 @@ def main():
     state_fips = args.fips[:2]
     county_fips = args.fips[2:]
 
-    # Get names for state and county, which are passed in by FIPS.
-    state = NAMES_FROM_IDS[state_fips]
-
+    # Get name of the county from the U.S. Census servers.
     df_county = ced.download(
-        ACS5,
-        args.vintage,
-
-        ['NAME'],
-
-        state=state_fips,
-        county=county_fips
+        ACS5, args.vintage, ["NAME"], state=state_fips, county=county_fips
     )
-    county_name = df_county['NAME'].iloc[0]
+    county_name = df_county["NAME"].iloc[0]
 
     level = getattr(logging, args.log)
 
@@ -203,7 +218,7 @@ def main():
     output_path = Path(args.output)
     year = args.vintage
 
-    renters_only = args.population == 'renters'
+    renters_only = args.population == "renters"
 
     df = pd.read_csv(
         data_path, header=0, dtype={"STATE": str, "COUNTY": str, "TRACT": str}
@@ -217,22 +232,33 @@ def main():
     linreg_intercept = result["linreg"]["intercept"]
 
     x_cols = var.x_cols(df, renters_only)
-    y_col = "filing_rate"
+    y_col = args.y_column
 
     df = df.dropna(subset=list(x_cols + [y_col]))
 
-    score_linreg = linreg_score(df, x_cols, y_col, result["linreg"]["coefficients"], result["linreg"]["intercept"])
+    score_linreg = linreg_score(
+        df,
+        x_cols,
+        y_col,
+        result["linreg"]["coefficients"],
+        result["linreg"]["intercept"],
+    )
     score_xgb = xgb_score(df, x_cols, y_col, xgb_params)
 
-    logger.info(f'Linreg score: {score_linreg}')
-    logger.info(f'Xgb score: {score_xgb}')
+    logger.info(f"Linreg score: {score_linreg}")
+    logger.info(f"Xgb score: {score_xgb}")
 
     output_path.mkdir(parents=True, exist_ok=True)
     plot_impact_chars(
-        df, x_cols, y_col, year, xgb_params, output_path,
+        df,
+        x_cols,
+        y_col,
+        xgb_params,
+        output_path,
         county_name=county_name,
-        linreg=False,
-        linreg_coefs=linreg_coefs, linreg_intercept=linreg_intercept
+        linreg=args.linreg,
+        linreg_coefs=linreg_coefs,
+        linreg_intercept=linreg_intercept,
     )
 
 

@@ -22,8 +22,8 @@ def main():
     parser.add_argument(
         "--fips",
         type=str,
-        nargs='+',
-        help="Provide this as SSCCC for the state and county."
+        nargs="+",
+        help="Provide this as SSCCC for the state and county.",
     )
 
     parser.add_argument("-o", "--output", required=True, type=str, help="Output file.")
@@ -62,4 +62,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

@@ -1,4 +1,5 @@
 import logging
+import sys
 from argparse import ArgumentParser, BooleanOptionalAction
 from pathlib import Path
 from typing import Any, Dict, Iterable, Optional
@@ -57,13 +58,13 @@ def optimize(
 
     return result
 
+
 def linreg(
     df: pd.DataFrame,
     x_cols: Iterable[str],
     y_col: str,
     w_col: Optional[str] = None,
 ) -> Dict[str, Any]:
-
     regressor = LinearRegression()
 
     if w_col is None:
@@ -79,7 +80,7 @@ def linreg(
     return {
         "coefficients": coefficients,
         "intercept": float(intercept),
-        "score": float(score)
+        "score": float(score),
     }
 
 
@@ -97,7 +98,7 @@ def main():
         "--fips",
         type=str,
         required=True,
-        help="Provide this as SSCCC for the state and county."
+        help="Provide this as SSCCC for the state and county.",
     )
 
     parser.add_argument("--dry-run", action=BooleanOptionalAction)
@@ -106,9 +107,21 @@ def main():
     )
 
     parser.add_argument(
-        "--population", type=str, choices=['all', 'renters'],
-        default="renters", required=True,
-        help="What do we base the population metrics on?"
+        "--population",
+        type=str,
+        choices=["all", "renters"],
+        default="renters",
+        required=True,
+        help="What do we base the population metrics on?",
+    )
+
+    parser.add_argument(
+        "-y",
+        "--y-column",
+        type=str,
+        choices=["filing_rate", "threatened_rate", "judgement_rate"],
+        default="filing_rate",
+        help="What variable are we trying to predict?",
     )
 
     parser.add_argument("data", help="Input data file. Typically from select.py.")
@@ -120,7 +133,7 @@ def main():
     logging.basicConfig(level=level)
     logger.setLevel(level)
 
-    renters_only = args.population == 'renters'
+    renters_only = args.population == "renters"
 
     data_path = Path(args.data)
     output_path = Path(args.output)
@@ -131,11 +144,15 @@ def main():
 
     x_cols = var.x_cols(df, renters_only)
 
-    y_col = "filing_rate"
+    y_col = args.y_column
 
     logger.info(f"Input shape: {df.shape}")
     df = df.dropna(subset=[y_col])
     logger.info(f"Shape after dropna: {df.shape}")
+
+    if len(df.index) == 0:
+        logger.warning(f"After removing nan from {y_col}, no data is left.")
+        sys, exit(1)
 
     logger.info(
         f"Range: {df[y_col].min()} - {df[y_col].max()}; mean: {df[y_col].mean()}"
@@ -148,7 +165,6 @@ def main():
 
     logger.info(f"Writing to output file `{output_path}`")
     output_path.parent.mkdir(parents=True, exist_ok=True)
-
 
     logger.info(f"All X shape: {df.shape}")
     df = df.dropna(subset=x_cols)
