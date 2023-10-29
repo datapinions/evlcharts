@@ -1,6 +1,7 @@
 import logging
 from argparse import ArgumentParser
 from pathlib import Path
+import evlcharts.variables as var
 
 import pandas as pd
 
@@ -20,8 +21,8 @@ def main():
     parser.add_argument(
         "--fips",
         type=str,
-        nargs='+',
-        help="Provide this as SSCCC for the state and county."
+        nargs="+",
+        help="Provide this as SSCCC for the state and county.",
     )
 
     parser.add_argument("-o", "--output", required=True, type=str, help="Output file.")
@@ -50,10 +51,17 @@ def main():
         state = fips[:2]
         county = fips[2:]
 
-        df_county = df[(df["STATE"] == state) & (df["COUNTY"] == county)]
+        # There are a handful of outliers where median income is
+        # over $250,000. The Census Bureau codes these as 250,001.
+        # We filter them out.
+        df_county = df[
+            (df["STATE"] == state)
+            & (df["COUNTY"] == county)
+            & (df[var.MEDIAN_HOUSEHOLD_INCOME_FOR_RENTERS] <= 250_000)
+        ]
 
         logger.info(f"Writing to output file `{output_path}`")
-        df_county.to_csv(output_path / f'{fips}.csv', index=False)
+        df_county.to_csv(output_path / f"{fips}.csv", index=False)
 
 
 if __name__ == "__main__":
