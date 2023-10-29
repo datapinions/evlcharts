@@ -88,3 +88,8 @@ $(TOP_SCORING): $(PARAMS_YAML)
 $(PLOT_DIR)/%: $(WORKING_DATA_DIR)/%.csv $(PARAMS_DIR)/xgb-params-%.yaml
 	$(PYTHON) -m evlcharts.plot --log $(LOGLEVEL) --population $(POPULATION) -y $(PREDICTION_Y) -o $@ -p $(word 2,$^) --fips $(basename $(notdir $(word 1,$^))) $(word 1,$^)
 	touch $@
+
+# A rule to make requirements.txt. Not part of the normal data build
+# process, but useful for maintenance if we add or update dependencies.
+requirements.txt: pyproject.toml poetry.lock
+	poetry export --without-hashes --format=requirements.txt > $@
