@@ -79,3 +79,11 @@ select {
     font: 400 12pt sans-serif;
     color: #cccccc;
 }
+
+#imgdiv img {
+    right: 0px;
+    left: 0px;
+    margin:auto;
+    display:block;
+    position:absolute;
+}
