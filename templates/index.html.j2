@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script defer data-domain="rih.datapinions.com" src="https://plausible.io/js/script.js"></script>
+    <script defer data-domain="evl.datapinions.com" src="https://plausible.io/js/script.js"></script>
     <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
 
     <link rel="stylesheet" href="./css/evlchart.css">
@@ -50,7 +50,7 @@
         const cofips_text = cofips_select.options[cofips_select.selectedIndex].textContent;
         const feature_text = feature_select.options[feature_select.selectedIndex].textContent;
 
-        plausible('Update', {props: {cofips: cofips_text, feature: feature_text, relative: false}});
+        plausible('Update', {props: {cofips: cofips_text, feature: feature_text}});
 
         const img_src = cofips + '/' + feature;
 
