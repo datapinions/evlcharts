@@ -1,9 +1,10 @@
 import logging
 from argparse import ArgumentParser
 from pathlib import Path
-import evlcharts.variables as var
 
 import pandas as pd
+
+import evlcharts.variables as var
 
 logger = logging.getLogger(__name__)
 

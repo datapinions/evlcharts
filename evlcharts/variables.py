@@ -1,4 +1,5 @@
 from typing import List
+
 import pandas as pd
 from censusdis import data as ced
 from censusdis.datasets import ACS5
@@ -30,7 +31,9 @@ TENURE_BY_RACE_GROUPS = [
 MEDIAN_HOUSEHOLD_INCOME_FOR_RENTERS = "B25119_003E"
 
 # We want to use the feature we constructed that corrects all years to 2018 dollars.
-MEDIAN_HOUSEHOLD_INCOME_FOR_RENTERS_2018_USD = f"{MEDIAN_HOUSEHOLD_INCOME_FOR_RENTERS}_2018"
+MEDIAN_HOUSEHOLD_INCOME_FOR_RENTERS_2018_USD = (
+    f"{MEDIAN_HOUSEHOLD_INCOME_FOR_RENTERS}_2018"
+)
 
 
 # Names of all of the features to use in labels on plots.
@@ -86,9 +89,7 @@ def cofips_name(fips, year):
     county_fips = fips[2:]
 
     # Get name of the county from the U.S. Census servers.
-    df_county = ced.download(
-        ACS5, year, ["NAME"], state=state_fips, county=county_fips
-    )
+    df_county = ced.download(ACS5, year, ["NAME"], state=state_fips, county=county_fips)
 
     county_name = df_county["NAME"].iloc[0]
     return county_name

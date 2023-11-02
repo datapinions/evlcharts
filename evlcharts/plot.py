@@ -1,18 +1,17 @@
 import logging
-from typing import Iterable, Optional
 from argparse import ArgumentParser, BooleanOptionalAction
 from pathlib import Path
+from typing import Iterable, Optional
 
 import numpy as np
 import pandas as pd
-import yaml
 import xgboost
-from sklearn.linear_model import LinearRegression
+import yaml
 from impactchart.model import XGBoostImpactModel
 from matplotlib.ticker import FuncFormatter, PercentFormatter
+from sklearn.linear_model import LinearRegression
 
 import evlcharts.variables as var
-
 
 logger = logging.getLogger(__name__)
 
