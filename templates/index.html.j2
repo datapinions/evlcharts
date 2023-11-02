@@ -132,14 +132,14 @@
     <h1>Impact</h1>
     <div id="imgdiv">
         <p>
-        The impact chart below shows the impact of a single feature in the
-        data the ensemble of 50 models was trained on the prediction is made for each census tract
-        in the county. The green dots are ensemble predictions for each tract. Each green dot's
+        The impact chart below shows the impact of a single feature
+        on the prediction made for each census tract
+        in the county. The green dots are mean predictions for each tract. Each green dot's
         <em>x</em> coordinate is the value of the feature for the tract. Its <em>y</em>
-        coordinate is the impact on the ensemble's predicted eviction rate for the tract.
+        coordinate is the impact.
         </p><p>
         For each tract there are also 50 gray dots vertically above or below the green
-        dot. These are the predictions of the 50 models that make up the ensemble, and give
+        dot. These are the predictions of 50 independent models. They function as error bars to give
         an idea of the variance of the impact.
       </p>
       <img id="plot" src="./images/sample.png"></img>
