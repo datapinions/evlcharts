@@ -141,7 +141,7 @@ def plot_impact_chars(
         feature_name = var.FEATURE_NAMES[feature]
 
         logger.info(f"Saving impact chart for {feature_name}.")
-        fig.savefig(output_path / f"{feature_name.replace(' ', '-')}.jpg")
+        fig.savefig(output_path / f"{feature_name.replace(' ', '-')}.png")
 
 
 def main():

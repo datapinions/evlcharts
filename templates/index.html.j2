@@ -85,44 +85,51 @@
     <p>Please select the county you are interested in:</p>
     <select name="cofips" id="cofips" onchange="onChangeSelect()">
       <option value="" disabled="true" selected="true">-</option>
-      {%- for row in top_n %}
-        <option value="{{row['image']}}">{{row['name']}} (r² = {{row['r2']}})</option>
+      {%- for state, counties in top_n.items() %}
+        <optgroup label="{{state}}">
+          {%- for county in counties %}
+            <option value="{{county['image']}}">{{county['name']}} (r² = {{county['r2']}})</option>
+          {% endfor %}
       {% endfor %}
     </select>
 
     <p>Please select the feature whose impact you want to plot:</p>
     <select name="feature" id="feature" onchange="onChangeSelect()">
         <option value="" disabled="true" selected="true">-</option>
-        <option value="White-alone-as-Percentage-of-Renters.jpg">
-        White Alone
-        </option>
-        <option value="Black-alone-as-Percentage-of-Renters.jpg">
-        Black Alone
-        </option>
-        <option value="American-Indian-or-Alaskan-Native-Alone-as-Percentage-of-Renters.jpg ">
-        American Indian and Alaska Native Alone
-        </option>
-        <option value="Native-Hawaiian-or-Other-Pacific-Islander-Alone-as-Percentage-of-Renters.jpg">
-        Native Hawaiian or Other Pacific Islander alone
-        </option>
-        <option value="Asian-alone-as-Percentage-of-Renters.jpg">
-        Asian Alone
-        </option>
-        <option value="Some-other-race-alone-as-Percentage-of-Renters.jpg">
-        Some other race Alone
-        </option>
-        <option value="Two-races-Excluding-Some-Other-Race,-or-Three-or-More-Races-as-Percentage-of-Renters.jpg">
-        Two or more races Two races excluding Some other race, or three or more races
-        </option>
-        <option value="Two-races-Including-Some-Other-Race-as-Percentage-of-Renters.jpg">
-        Two or more races Two races including Some other race
-        </option>
-        <option value="Hispanic-or-Latino-of-any-Race-as-Percentage-of-Renters.jpg">
-        Hispanic or Latino of any Race
-        </option>
-        <option value="Median-Household-Income-for-Renters---2018-Dollars.jpg ">
-        Median Household Income for Renters (in 2018 inflation adjusted dollars)
-        </option>
+        <optgroup label="Race/Ethicity">
+            <option value="White-Alone-as-Percentage-of-Renters.png">
+            White Alone
+            </option>
+            <option value="Black-Alone-as-Percentage-of-Renters.png">
+            Black Alone
+            </option>
+            <option value="American-Indian-or-Alaskan-Native-Alone-as-Percentage-of-Renters.png ">
+            American Indian and Alaska Native Alone
+            </option>
+            <option value="Native-Hawaiian-or-Other-Pacific-Islander-Alone-as-Percentage-of-Renters.png">
+            Native Hawaiian or Other Pacific Islander alone
+            </option>
+            <option value="Asian-Alone-as-Percentage-of-Renters.png">
+            Asian Alone
+            </option>
+            <option value="Hispanic-or-Latino-of-any-Race-as-Percentage-of-Renters.png">
+            Hispanic or Latino of any Race
+            </option>
+            <option value="Some-other-race-Alone-as-Percentage-of-Renters.png">
+            Some other race Alone
+            </option>
+            <option value="Two-races-Excluding-Some-Other-Race,-or-Three-or-More-Races-as-Percentage-of-Renters.png">
+            Two or more races Two races excluding Some other race, or three or more races
+            </option>
+            <option value="Two-races-Including-Some-Other-Race-as-Percentage-of-Renters.png">
+            Two or more races Two races including Some other race
+            </option>
+        </optgroup>
+        <optgroup label="Economic">
+            <option value="Median-Household-Income-for-Renters---2018-Dollars.png ">
+            Median Household Income for Renters (in 2018 inflation adjusted dollars)
+            </option>
+        </optgroup>
     </select>
 
     <p><button id="ok" disabled="true" onclick="onUpdate()">OK</button></p>
