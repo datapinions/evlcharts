@@ -28,7 +28,7 @@ def main():
         help="What variable are we trying to predict?",
     )
 
-    parser.add_argument("-t", "--threshold", type=int, default=10)
+    parser.add_argument("-t", "--threshold", type=int, default=100)
 
     parser.add_argument(
         "-f",
@@ -66,7 +66,7 @@ def main():
         ]
 
         if len(df_county.index) < args.threshold:
-            logger.info(f"Less than 10 rows for county fips {fips}")
+            logger.info(f"Less than {args.threshold} rows for county fips {fips}")
         else:
             good_fips.append(fips)
 

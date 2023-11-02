@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script defer data-domain="evl.datapinions.com" src="https://plausible.io/js/script.js"></script>
+    <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
+
+    <link rel="stylesheet" href="./css/evlchart.css">
+
+    <link rel="icon" href="./favicon512.png" sizes="512x512" />
+    <link rel="icon" href="./favicon192.png" sizes="192x192" />
+    <link rel="icon" href="./favicon32.png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="./favicon180.png" />
+    <meta name="msapplication-TileImage" content="./favicon270.png" />
+</head>
+
+<body>
+  <div id="titlebar">
+    <h1 id="title">
+      Impact Chart Demonstration
+    </h1>
+  </div>
+
+  <script>
+    var changed = false;
+
+    function onChangeSelect() {
+        changed = true;
+
+        const select_cofips = document.getElementById("cofips");
+        const select_feature = document.getElementById("feature");
+
+        const ok_button = document.getElementById("ok");
+
+        ok_button.disabled = !changed || (select_cofips.value == "") || (select_feature.value == "");
+    }
+
+    function unfade(element) {
+        element.style.color = "#333"
+    }
+
+    function onUpdate() {
+        changed = false;
+
+        const cofips_select = document.getElementById("cofips");
+        const feature_select = document.getElementById("feature");
+
+        const cofips = cofips_select.value;
+        const feature = feature_select.value;
+
+        const cofips_text = cofips_select.options[cofips_select.selectedIndex].textContent;
+        const feature_text = feature_select.options[feature_select.selectedIndex].textContent;
+
+        plausible('Update', {props: {cofips: cofips_text, feature: feature_text}});
+
+        const img_src = cofips + '/' + feature;
+
+        document.getElementById("plot").src = img_src;
+
+        const ok_button = document.getElementById("ok");
+        ok_button.disabled = true;
+        ok_button.innerText = ok_button.textContent = 'Update';
+
+        const headings = document.querySelectorAll('#output h1');
+        const paragraphs = document.querySelectorAll('#imgdiv p');
+
+        headings.forEach(unfade);
+        paragraphs.forEach(unfade);
+    }
+  </script>
+
+  <div id="intro">
+    <p>
+        This is an interactive companion to
+        <a href="https://datapinions.com/an-introduction-to-impact-charts/">An Introduction to Impact Charts</a>.
+        In addition to the charts discussed in the post,
+        it can show you similar charts for a number of different
+        counties around the country for which we were able
+        to obtain sufficient data from the <a href="https://evictionlab.org/">Eviction Lab</a>.
+        We define sufficient data as at least 200 census tracts for which eviction filing rate
+        is available.
+    </p>
+  </div>
+
+  <div id="selections">
+    <p>Please select the county you are interested in:</p>
+    <select name="cofips" id="cofips" onchange="onChangeSelect()">
+      <option value="" disabled="true" selected="true">-</option>
+      {%- for state, counties in top_n.items() %}
+        <optgroup label="{{state}}">
+          {%- for county in counties %}
+            <option value="{{county['image']}}">{{county['name']}} (r² = {{county['r2']}})</option>
+          {% endfor %}
+      {% endfor %}
+    </select>
+
+    <p>Please select the feature whose impact you want to plot:</p>
+    <select name="feature" id="feature" onchange="onChangeSelect()">
+        <option value="" disabled="true" selected="true">-</option>
+        <optgroup label="Race/Ethicity">
+            <option value="White-Alone-as-Percentage-of-Renters.png">
+            White Alone
+            </option>
+            <option value="Black-Alone-as-Percentage-of-Renters.png">
+            Black Alone
+            </option>
+            <option value="American-Indian-or-Alaskan-Native-Alone-as-Percentage-of-Renters.png ">
+            American Indian and Alaska Native Alone
+            </option>
+            <option value="Native-Hawaiian-or-Other-Pacific-Islander-Alone-as-Percentage-of-Renters.png">
+            Native Hawaiian or Other Pacific Islander alone
+            </option>
+            <option value="Asian-Alone-as-Percentage-of-Renters.png">
+            Asian Alone
+            </option>
+            <option value="Hispanic-or-Latino-of-any-Race-as-Percentage-of-Renters.png">
+            Hispanic or Latino of any Race
+            </option>
+            <option value="Some-other-race-Alone-as-Percentage-of-Renters.png">
+            Some other race Alone
+            </option>
+            <option value="Two-races-Excluding-Some-Other-Race,-or-Three-or-More-Races-as-Percentage-of-Renters.png">
+            Two or more races Two races excluding Some other race, or three or more races
+            </option>
+            <option value="Two-races-Including-Some-Other-Race-as-Percentage-of-Renters.png">
+            Two or more races Two races including Some other race
+            </option>
+        </optgroup>
+        <optgroup label="Economic">
+            <option value="Median-Household-Income-for-Renters---2018-Dollars.png ">
+            Median Household Income for Renters (in 2018 inflation adjusted dollars)
+            </option>
+        </optgroup>
+    </select>
+
+    <p><button id="ok" disabled="true" onclick="onUpdate()">OK</button></p>
+  </div>
+
+  <div id="output">
+    <h1>Impact</h1>
+    <div id="imgdiv">
+        <p>
+        The impact chart below shows the impact of a single feature
+        on the prediction made for each census tract
+        in the county. The green dots are mean predictions for each tract. Each green dot's
+        <em>x</em> coordinate is the value of the feature for the tract. Its <em>y</em>
+        coordinate is the impact.
+        </p><p>
+        For each tract there are also 50 gray dots vertically above or below the green
+        dot. These are the predictions of 50 independent models. They function as error bars to give
+        an idea of the variance of the impact.
+      </p>
+      <img id="plot" src="./images/sample.png"></img>
+    </div>
+  </div>
+</body>

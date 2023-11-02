@@ -1,10 +1,9 @@
 import logging
 from argparse import ArgumentParser
 from pathlib import Path
-import yaml
 
 import pandas as pd
-
+import yaml
 
 logger = logging.getLogger(__name__)
 

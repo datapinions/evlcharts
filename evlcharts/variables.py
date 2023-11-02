@@ -1,6 +1,8 @@
 from typing import List
-import pandas as pd
 
+import pandas as pd
+from censusdis import data as ced
+from censusdis.datasets import ACS5
 
 # From the population by race group https://api.census.gov/data/2018/acs/acs5/groups/B03002.html
 GROUP_HISPANIC_OR_LATINO_ORIGIN_BY_RACE = "B03002"
@@ -26,9 +28,13 @@ TENURE_BY_RACE_GROUPS = [
 ]
 
 # From income by tenure group https://api.census.gov/data/2018/acs/acs5/groups/B25119.html
-GROUP_MEDIAN_HOUSEHOLD_INCOME_BY_TENURE = "B25119"
-
 MEDIAN_HOUSEHOLD_INCOME_FOR_RENTERS = "B25119_003E"
+
+# We want to use the feature we constructed that corrects all years to 2018 dollars.
+MEDIAN_HOUSEHOLD_INCOME_FOR_RENTERS_2018_USD = (
+    f"{MEDIAN_HOUSEHOLD_INCOME_FOR_RENTERS}_2018"
+)
+
 
 # Names of all of the features to use in labels on plots.
 FEATURE_NAMES = {
@@ -51,14 +57,14 @@ FEATURE_NAMES = {
     "frac_B25003G_003E": "Two races Including Some Other Race as Percentage of Renters",
     "frac_B25003H_003E": "Two races Excluding Some Other Race, or Three or More Races as Percentage of Renters",
     "frac_B25003I_003E": "Hispanic or Latino of any Race as Percentage of Renters",
-    MEDIAN_HOUSEHOLD_INCOME_FOR_RENTERS: "Median Household Income for Renters",
+    MEDIAN_HOUSEHOLD_INCOME_FOR_RENTERS_2018_USD: "Median Household Income for Renters - 2018 Dollars",
 }
 
 
 def x_cols(df: pd.DataFrame, renters_only: bool) -> List[str]:
     if renters_only:
         cols = [
-            MEDIAN_HOUSEHOLD_INCOME_FOR_RENTERS,
+            MEDIAN_HOUSEHOLD_INCOME_FOR_RENTERS_2018_USD,
         ] + [
             f"frac_{variable}"
             for variable in df.columns
@@ -67,7 +73,7 @@ def x_cols(df: pd.DataFrame, renters_only: bool) -> List[str]:
         ]
     else:
         cols = [
-            MEDIAN_HOUSEHOLD_INCOME_FOR_RENTERS,
+            MEDIAN_HOUSEHOLD_INCOME_FOR_RENTERS_2018_USD,
         ] + [
             f"frac_{variable}"
             for variable in df.columns
@@ -76,3 +82,14 @@ def x_cols(df: pd.DataFrame, renters_only: bool) -> List[str]:
         ]
 
     return cols
+
+
+def cofips_name(fips, year):
+    state_fips = fips[:2]
+    county_fips = fips[2:]
+
+    # Get name of the county from the U.S. Census servers.
+    df_county = ced.download(ACS5, year, ["NAME"], state=state_fips, county=county_fips)
+
+    county_name = df_county["NAME"].iloc[0]
+    return county_name

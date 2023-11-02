@@ -1,20 +1,17 @@
 import logging
-from typing import Iterable, Optional
 from argparse import ArgumentParser, BooleanOptionalAction
 from pathlib import Path
+from typing import Iterable, Optional
 
 import numpy as np
 import pandas as pd
-import yaml
 import xgboost
-from sklearn.linear_model import LinearRegression
-from censusdis.datasets import ACS5
+import yaml
 from impactchart.model import XGBoostImpactModel
 from matplotlib.ticker import FuncFormatter, PercentFormatter
+from sklearn.linear_model import LinearRegression
 
 import evlcharts.variables as var
-import censusdis.data as ced
-
 
 logger = logging.getLogger(__name__)
 
@@ -144,7 +141,7 @@ def plot_impact_chars(
         feature_name = var.FEATURE_NAMES[feature]
 
         logger.info(f"Saving impact chart for {feature_name}.")
-        fig.savefig(output_path / f"{feature_name.replace(' ', '-')}.jpg")
+        fig.savefig(output_path / f"{feature_name.replace(' ', '-')}.png")
 
 
 def main():
@@ -199,14 +196,10 @@ def main():
 
     args = parser.parse_args()
 
-    state_fips = args.fips[:2]
-    county_fips = args.fips[2:]
+    fips = args.fips
+    year = args.vintage
 
-    # Get name of the county from the U.S. Census servers.
-    df_county = ced.download(
-        ACS5, args.vintage, ["NAME"], state=state_fips, county=county_fips
-    )
-    county_name = df_county["NAME"].iloc[0]
+    county_name = var.cofips_name(fips, year)
 
     level = getattr(logging, args.log)
 
