@@ -1,7 +1,8 @@
 import logging
 from argparse import ArgumentParser
-from pathlib import Path
 from collections import defaultdict
+from pathlib import Path
+
 import jinja2
 import pandas as pd
 
@@ -53,8 +54,12 @@ def main():
 
     df_top["NAME"] = df_top["FIPS"].apply(lambda cofips: var.cofips_name(cofips, 2018))
 
-    df_top["STATE"] = df_top["NAME"].apply(lambda county_state: county_state.split(',')[-1].strip())
-    df_top["COUNTY"] = df_top["NAME"].apply(lambda county_state: county_state.split(',')[0].strip())
+    df_top["STATE"] = df_top["NAME"].apply(
+        lambda county_state: county_state.split(",")[-1].strip()
+    )
+    df_top["COUNTY"] = df_top["NAME"].apply(
+        lambda county_state: county_state.split(",")[0].strip()
+    )
 
     df_top.sort_values(by=["STATE", "COUNTY"], inplace=True)
 
