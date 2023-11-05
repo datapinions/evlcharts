@@ -61,10 +61,30 @@
         ok_button.innerText = ok_button.textContent = 'Update';
 
         const headings = document.querySelectorAll('#output h1');
-        const paragraphs = document.querySelectorAll('#imgdiv p');
+        const paragraphs0 = document.querySelectorAll('#imgdiv p');
+        const paragraphs1 = document.querySelectorAll('#coveragediv p');
 
         headings.forEach(unfade);
-        paragraphs.forEach(unfade);
+        paragraphs0.forEach(unfade);
+        paragraphs1.forEach(unfade);
+
+        const cofips_id = cofips.substring(cofips.lastIndexOf('/') + 1)
+
+        for (let year = {{map_years[0]}}; year < {{map_years[1]}}; year++) {
+
+            var map_img = document.createElement("img");
+            map_img.src = "./images/coverage_maps/" + cofips_id + '/' + year + ".png";
+
+            var parent = document.getElementById("coverage" + year);
+
+            while (parent.firstChild) {
+              parent.removeChild(parent.lastChild);
+            }
+            parent.appendChild(map_img);
+        }
+
+        var all_coverage = document.getElementById("allcoverage")
+        all_coverage.style.display = "block";
     }
   </script>
 
@@ -150,6 +170,23 @@
         an idea of the variance of the impact.
       </p>
       <img id="plot" src="./images/sample.png"></img>
+    </div>
+    <hr></hr>
+    <h1>Data Coverage</h1>
+    <div id="coveragediv">
+      <div>
+        <p>
+        In order to make it clear what data went into the impact chart above, we have
+        produced the maps below. For details on how to interpret the maps, please see
+        <a href="https://datapinions.com/the-impact-of-demographics-and-income-on-eviction-rates/">this post</a>.
+        </p>
+      </div>
+      <div id="allcoverage">
+        {%- for year in range(*map_years) %}
+          <div id="coverage{{year}}" class="coverage">
+          </div>
+        {% endfor %}
+      </div>
     </div>
   </div>
 </body>

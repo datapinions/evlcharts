@@ -70,7 +70,8 @@ select {
     color: #cccccc;
 }
 
-#imgdiv p {
+#output p {
+    text-align: left;
     margin-left: auto;
     margin-right: auto;
     margin-top: 1.5em;
@@ -80,10 +81,38 @@ select {
     color: #cccccc;
 }
 
+#imgdiv {
+    text-align: center;
+    width: 95%;
+    min-width: 1200px;
+}
+
 #imgdiv img {
-    right: 0px;
-    left: 0px;
-    margin:auto;
-    display:block;
-    position:absolute;
+    float: none;
+    margin: 0 auto;
+    border: 1px solid #333333;
+}
+
+hr {
+    margin-top: 64px;
+    margin-bottom: 24px;
+}
+
+#allcoverage {
+    display: none
+    margin-left: auto;
+    margin-right: auto;
+    justify-content: center;
+}
+
+div.coverage {
+    float: left;
+    width: 320px;
+    height:320px;
+}
+
+div.coverage img {
+    border: 1px solid #333333;
+    display: block;
+    margin: 0 auto;
 }
