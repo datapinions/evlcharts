@@ -81,6 +81,10 @@ TOP_SCORING := $(PARAMS_DIR)/top_scores-$(POPULATION)-$(PREDICTION_Y).csv
 PLOT_DIR := ./plots/$(POPULATION)/$(PREDICTION_Y)
 COUNTY_PLOT_DIRS = $(FIPS:%=$(PLOT_DIR)/%)
 
+# Coverage maps.
+COVERAGE_MAPS_DIR := $(WORKING_DIR)/maps/$(PREDICTION_Y)
+COVERAGE_MAPS := $(FIPS:%=$(COVERAGE_MAPS_DIR)/%)
+
 .PRECIOUS: $(PARAMS_YAML) $(COUNTY_DATA)
 
 # Templates and related details for rendering the site.
@@ -93,7 +97,7 @@ HTML_NAMES := index.html
 SITE_HTML := $(HTML_NAMES:%=$(SITE_DIR)/%)
 HTML_TEMPLATES := $(HTML_NAMES:%.html=$(HTML_TEMPLATE_DIR)/%.html.j2)
 
-.PHONY: all top site_html data params clean
+.PHONY: all top site_html data params maps clean
 
 all: $(COUNTY_PLOT_DIRS) $(TOP_SCORING)
 
@@ -119,8 +123,15 @@ $(PLOT_DIR)/%: $(WORKING_DATA_DIR)/%.csv $(PARAMS_DIR)/xgb-params-%.yaml
 	$(PYTHON) -m evlcharts.plot --log $(LOGLEVEL) --population $(POPULATION) -y $(PREDICTION_Y) -o $@ -p $(word 2,$^) --fips $(basename $(notdir $(word 1,$^))) $(word 1,$^)
 	touch $@
 
+# Rules to make maps indicating where we have coverage.
+maps: $(COVERAGE_MAPS)
+
+$(COVERAGE_MAPS_DIR)/%: $(WORKING_DATA_DIR)/%.csv
+	$(PYTHON) -m evlcharts.maps --fips $(@F) -y $(PREDICTION_Y) -o $@ $<
+	touch $@
+
 # Rules to make the site.
-site_html: $(SITE_HTML) $(SITE_PLOTS) $(SITE_IMAGE_DIR)/impact_charts
+site_html: $(SITE_HTML) $(SITE_PLOTS) $(SITE_IMAGE_DIR)/impact_charts $(COVERAGE_MAPS) $(SITE_IMAGE_DIR)/coverage_maps
 	cp -r $(STATIC_HTML_DIR)/* $(SITE_DIR)
 
 $(SITE_IMAGE_DIR)/impact_charts: $(COUNTY_PLOT_DIRS)
@@ -128,11 +139,14 @@ $(SITE_IMAGE_DIR)/impact_charts: $(COUNTY_PLOT_DIRS)
 	mkdir -p $@
 	cp -r $(COUNTY_PLOT_DIRS) $@
 
+$(SITE_IMAGE_DIR)/coverage_maps: $(COVERAGE_MAPS_DIR)
+	-rm -rf $@
+	cp -r $< $@
+
 # How to render and HTML template for the site.
 $(SITE_DIR)/%.html: $(HTML_TEMPLATE_DIR)/%.html.j2
 	mkdir -p $(@D)
 	$(PYTHON) -m evlcharts.rendersite --log $(LOGLEVEL) -t $(TOP_SCORING) -o $@ $<
-
 
 # A rule to make requirements.txt. Not part of the normal data build
 # process, but useful for maintenance if we add or update dependencies.

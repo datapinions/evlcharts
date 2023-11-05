@@ -70,7 +70,8 @@ select {
     color: #cccccc;
 }
 
-#imgdiv p {
+#output p {
+    text-align: left;
     margin-left: auto;
     margin-right: auto;
     margin-top: 1.5em;
@@ -80,7 +81,34 @@ select {
     color: #cccccc;
 }
 
+#imgdiv {
+    text-align: center;
+}
+
 #imgdiv img {
+    float: none;
+    margin: 0 auto;
+    border: 3px solid #73AD21;
+}
+
+#allcoverage {
+    display: none
+}
+
+div.coverage {
+    float: left;
+    width: 320px;
+    height:320px;
+}
+
+div.coverage img {
+    border: 1px solid #333333;
+    display: block;
+    margin: 0 auto;
+}
+
+#coveragedivx img {
+    color: khaki;
     right: 0px;
     left: 0px;
     margin:auto;
