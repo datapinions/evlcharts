@@ -76,7 +76,7 @@ def main():
 
     template_args = dict(
         top_n=top_n_by_state,
-        map_years=(2009, 2019)  # will use in range() in the template.
+        map_years=(2009, 2019),  # will use in range() in the template.
     )
 
     searchpath = Path(__file__).absolute().parent.parent

@@ -11,11 +11,13 @@ logger = logging.getLogger(__name__)
 def check_images(path: Path, expected_maps: int) -> int:
     err_count = 0
 
-    for county_path in path.glob('*'):
-        image_count = len(list(county_path.glob('*.png')))
+    for county_path in path.glob("*"):
+        image_count = len(list(county_path.glob("*.png")))
 
         if image_count != expected_maps:
-            print(f"Found {image_count} files in {county_path}; expected {expected_maps}")
+            print(
+                f"Found {image_count} files in {county_path}; expected {expected_maps}"
+            )
             err_count = err_count + 1
 
     return err_count
