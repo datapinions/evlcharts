@@ -97,7 +97,7 @@ HTML_NAMES := index.html
 SITE_HTML := $(HTML_NAMES:%=$(SITE_DIR)/%)
 HTML_TEMPLATES := $(HTML_NAMES:%.html=$(HTML_TEMPLATE_DIR)/%.html.j2)
 
-.PHONY: all top site_html data params maps clean
+.PHONY: all top site_html check_site data params maps clean
 
 all: $(COUNTY_PLOT_DIRS) $(TOP_SCORING)
 
@@ -133,6 +133,9 @@ $(COVERAGE_MAPS_DIR)/%: $(WORKING_DATA_DIR)/%.csv
 # Rules to make the site.
 site_html: $(SITE_HTML) $(SITE_PLOTS) $(SITE_IMAGE_DIR)/impact_charts $(COVERAGE_MAPS) $(SITE_IMAGE_DIR)/coverage_maps
 	cp -r $(STATIC_HTML_DIR)/* $(SITE_DIR)
+
+check_site: site_html
+	$(PYTHON) -m evlcharts.checksite --log $(LOGLEVEL) $(SITE_DIR)
 
 $(SITE_IMAGE_DIR)/impact_charts: $(COUNTY_PLOT_DIRS)
 	-rm -rf $@

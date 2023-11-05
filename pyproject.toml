@@ -9,7 +9,7 @@ readme = "README.md"
 python = "^3.11"
 impactchart = "^0.1.4"
 PyYAML = "^6.0"
-censusdis = "^0.17.0"
+censusdis = "^0.17.1"
 bayesian-optimization = "^1.4.2"
 Jinja2 = "^3.1.2"
 

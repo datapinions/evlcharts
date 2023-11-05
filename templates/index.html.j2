@@ -76,6 +76,10 @@
             map_img.src = "./images/coverage_maps/" + cofips_id + '/' + year + ".png";
 
             var parent = document.getElementById("coverage" + year);
+
+            while (parent.firstChild) {
+              parent.removeChild(parent.lastChild);
+            }
             parent.appendChild(map_img);
         }
 
@@ -167,13 +171,34 @@
       </p>
       <img id="plot" src="./images/sample.png"></img>
     </div>
+    <hr></hr>
     <h1>Data Coverage</h1>
     <div id="coveragediv">
       <div>
         <p>
-          Data comes from the census tracts highlighted in green over the 10 years covered
-          by the study. Not all tracts have eviction data for all years. Over time, tracts are
-          sometimes added or split as population patterns change.
+        In order to make it clear what data went into the impact chart above, we have
+        produced the maps below.
+        </p>
+        <p>
+          Data on eviction rates comes from the proprietary data set produced by the
+          <a href="https://evictionlab.org/" target="_blank">Eviction Lab</a>. This data
+          set does not cover all geographies and different years have different coverage.
+          Additionally, the Census Bureau adds, removes, or changes the boundaries of
+          census tracts from time to time as the population shifts.
+        </p>
+        <p>
+          There is one map of the county below for each year we considered. Each small
+          area in each map is a census tract. The green ones are the ones for which data
+          was available. Data from all of the green tracts went into building the models
+          that produced the impact chart above. Dollar figures were inflation adjusted to
+          2018 dollars.
+        </p>
+        <p>
+          The more green in the maps below, the more representative our models are. To the
+          extend that the times or places where data is missing happen to be correlated with
+          circumstances of atypical eviction activity, the impact charts may be less accurate.
+          Missing data for an entire year or two is less problematic than missing data
+          systematically year after year for one part of the county.
         </p>
       </div>
       <div id="allcoverage">

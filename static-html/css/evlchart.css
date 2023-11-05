@@ -83,16 +83,26 @@ select {
 
 #imgdiv {
     text-align: center;
+    width: 95%;
+    min-width: 1200px;
 }
 
 #imgdiv img {
     float: none;
     margin: 0 auto;
-    border: 3px solid #73AD21;
+    border: 1px solid #333333;
+}
+
+hr {
+    margin-top: 64px;
+    margin-bottom: 24px;
 }
 
 #allcoverage {
     display: none
+    margin-left: auto;
+    margin-right: auto;
+    justify-content: center;
 }
 
 div.coverage {
@@ -105,13 +115,4 @@ div.coverage img {
     border: 1px solid #333333;
     display: block;
     margin: 0 auto;
-}
-
-#coveragedivx img {
-    color: khaki;
-    right: 0px;
-    left: 0px;
-    margin:auto;
-    display:block;
-    position:absolute;
 }
