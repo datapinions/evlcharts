@@ -1,5 +1,5 @@
 import logging
-from argparse import ArgumentParser, BooleanOptionalAction
+from argparse import BooleanOptionalAction
 from pathlib import Path
 from typing import Iterable, Optional
 
@@ -12,6 +12,7 @@ from matplotlib.ticker import FuncFormatter, PercentFormatter
 from sklearn.linear_model import LinearRegression
 
 import evlcharts.variables as var
+from evlcharts.loggingargparser import LoggingArgumentParser
 
 logger = logging.getLogger(__name__)
 
@@ -145,14 +146,7 @@ def plot_impact_chars(
 
 
 def main():
-    parser = ArgumentParser()
-
-    parser.add_argument(
-        "--log",
-        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        help="Logging level.",
-        default="WARNING",
-    )
+    parser = LoggingArgumentParser(logger)
 
     parser.add_argument("--dry-run", action=BooleanOptionalAction)
     parser.add_argument(
@@ -200,11 +194,6 @@ def main():
     year = args.vintage
 
     county_name = var.cofips_name(fips, year)
-
-    level = getattr(logging, args.log)
-
-    logging.basicConfig(level=level)
-    logger.setLevel(level)
 
     data_path = Path(args.data)
     output_path = Path(args.output)

@@ -2,8 +2,9 @@
 
 import logging
 import sys
-from argparse import ArgumentParser
 from pathlib import Path
+
+from evlcharts.loggingargparser import LoggingArgumentParser
 
 logger = logging.getLogger(__name__)
 
@@ -36,23 +37,11 @@ def check_maps(site_path: Path) -> int:
 
 
 def main():
-    parser = ArgumentParser()
-
-    parser.add_argument(
-        "--log",
-        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        help="Logging level.",
-        default="WARNING",
-    )
+    parser = LoggingArgumentParser(logger)
 
     parser.add_argument("site", help="Site directory.")
 
     args = parser.parse_args()
-
-    level = getattr(logging, args.log)
-
-    logging.basicConfig(level=level)
-    logger.setLevel(level)
 
     site_path = Path(args.site)
 

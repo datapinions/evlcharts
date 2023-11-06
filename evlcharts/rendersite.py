@@ -1,5 +1,4 @@
 import logging
-from argparse import ArgumentParser
 from collections import defaultdict
 from pathlib import Path
 
@@ -7,19 +6,13 @@ import jinja2
 import pandas as pd
 
 import evlcharts.variables as var
+from evlcharts.loggingargparser import LoggingArgumentParser
 
 logger = logging.getLogger(__name__)
 
 
 def main():
-    parser = ArgumentParser()
-
-    parser.add_argument(
-        "--log",
-        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        help="Logging level.",
-        default="WARNING",
-    )
+    parser = LoggingArgumentParser(logger)
 
     parser.add_argument(
         "-o", "--output-file", required=True, help="Output file for results."
@@ -36,11 +29,6 @@ def main():
     parser.add_argument("template_file", help="Template file.")
 
     args = parser.parse_args()
-
-    level = getattr(logging, args.log)
-
-    logging.basicConfig(level=level)
-    logger.setLevel(level)
 
     logger.info(f"Reading template from {args.template_file}")
     logger.info(f"Reading top n data from {args.top_n_file}")

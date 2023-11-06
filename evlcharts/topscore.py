@@ -1,22 +1,16 @@
 import logging
-from argparse import ArgumentParser
 from pathlib import Path
 
 import pandas as pd
 import yaml
 
+from evlcharts.loggingargparser import LoggingArgumentParser
+
 logger = logging.getLogger(__name__)
 
 
 def main():
-    parser = ArgumentParser()
-
-    parser.add_argument(
-        "--log",
-        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        help="Logging level.",
-        default="WARNING",
-    )
+    parser = LoggingArgumentParser(logger)
 
     parser.add_argument(
         "--fips",
@@ -30,11 +24,6 @@ def main():
     parser.add_argument("params", nargs="+", help="Input parameter files")
 
     args = parser.parse_args()
-
-    level = getattr(logging, args.log)
-
-    logging.basicConfig(level=level)
-    logger.setLevel(level)
 
     output_path = Path(args.output)
 
