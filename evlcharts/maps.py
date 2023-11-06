@@ -1,11 +1,12 @@
 import logging
-from argparse import ArgumentParser
 from pathlib import Path
 
 import censusdis.data as ced
 import matplotlib.pyplot as plt
 import pandas as pd
 from censusdis.datasets import ACS5, DECENNIAL_PUBLIC_LAW_94_171
+
+from evlcharts.loggingargparser import LoggingArgumentParser
 
 logger = logging.getLogger(__name__)
 
@@ -22,14 +23,7 @@ A map for years for which there are not CB shapefiles available to the alternate
 
 
 def main():
-    parser = ArgumentParser()
-
-    parser.add_argument(
-        "--log",
-        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        help="Logging level.",
-        default="WARNING",
-    )
+    parser = LoggingArgumentParser(logger)
 
     parser.add_argument(
         "--fips",
@@ -54,11 +48,6 @@ def main():
     parser.add_argument("input", help="Input file. The output of join.py.")
 
     args = parser.parse_args()
-
-    level = getattr(logging, args.log)
-
-    logging.basicConfig(level=level)
-    logger.setLevel(level)
 
     input_path = Path(args.input)
     output_path = Path(args.output)

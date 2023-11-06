@@ -1,6 +1,6 @@
 import logging
 import sys
-from argparse import ArgumentParser, BooleanOptionalAction
+from argparse import BooleanOptionalAction
 from pathlib import Path
 from typing import Any, Dict, Iterable, Optional
 
@@ -12,6 +12,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import RandomizedSearchCV
 
 import evlcharts.variables as var
+from evlcharts.loggingargparser import LoggingArgumentParser
 
 logger = logging.getLogger(__name__)
 
@@ -85,14 +86,7 @@ def linreg(
 
 
 def main():
-    parser = ArgumentParser()
-
-    parser.add_argument(
-        "--log",
-        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        help="Logging level.",
-        default="WARNING",
-    )
+    parser = LoggingArgumentParser(logger)
 
     parser.add_argument(
         "--fips",
@@ -127,11 +121,6 @@ def main():
     parser.add_argument("data", help="Input data file. Typically from select.py.")
 
     args = parser.parse_args()
-
-    level = getattr(logging, args.log)
-
-    logging.basicConfig(level=level)
-    logger.setLevel(level)
 
     renters_only = args.population == "renters"
 
