@@ -55,31 +55,21 @@ def _plot_id(feature, k, n, seed):
 
 
 def plot_impact_chars(
-    df,
-    x_cols,
+    impact_model: XGBoostImpactModel,
+    X: pd.DataFrame,
     y_col,
-    params,
     output_path: Path,
     county_name: str,
+    k: int,
+    seed: int,
     *,
     linreg: bool = False,
     linreg_coefs: Optional[Iterable[float]] = None,
     linreg_intercept: Optional[float] = None,
 ):
-    X = df[list(x_cols)]
-    y = df[y_col]
-    w = df[var.VARIABLE_TOTAL_RENTERS]
-
     if linreg:
         reg_linreg = _linreg_from_coefficients(linreg_coefs, linreg_intercept)
 
-    k = 50
-    seed = 0x3423CDF1
-
-    impact_model = XGBoostImpactModel(
-        ensemble_size=k, random_state=seed, estimator_kwargs=params
-    )
-    impact_model.fit(X, y, sample_weight=w)
     impact_charts = impact_model.impact_charts(
         X,
         X.columns,
@@ -117,7 +107,7 @@ def plot_impact_chars(
                 feature, "impact", color="orange", ax=ax, label="Linear Model"
             )
 
-        plot_id = _plot_id(feature, k, len(df.index), seed)
+        plot_id = _plot_id(feature, k, len(X.index), seed)
         ax.text(
             0.99,
             0.01,
@@ -187,6 +177,9 @@ def main():
     )
 
     parser.add_argument("--linreg", action="store_true")
+
+    parser.add_argument("--bucket", help="Where to write bucket impact analysis.")
+
     parser.add_argument("data", help="Input data file. Typically from select.py.")
 
     args = parser.parse_args()
@@ -230,17 +223,47 @@ def main():
     logger.info(f"Xgb score: {score_xgb}")
 
     output_path.mkdir(parents=True, exist_ok=True)
+
+    X = df[list(x_cols)]
+    y = df[y_col]
+
+    k = 50
+    seed = 0x3423CDF1
+
+    impact_model = XGBoostImpactModel(
+        ensemble_size=k, random_state=seed, estimator_kwargs=xgb_params
+    )
+    impact_model.fit(X, y)
+
     plot_impact_chars(
-        df,
-        x_cols,
+        impact_model,
+        X,
         y_col,
-        xgb_params,
         output_path,
         county_name=county_name,
+        k=k,
+        seed=seed,
         linreg=args.linreg,
         linreg_coefs=linreg_coefs,
         linreg_intercept=linreg_intercept,
     )
+
+    if args.bucket is not None:
+        logging.info("Computing bucketed impact.")
+
+        df_bucketed_impact = pd.concat(
+            (
+                impact_model.bucketed_impact(X, feature)[["impact"]].rename(
+                    {"impact": feature}, axis="columns"
+                )
+                for feature in x_cols
+            ),
+            axis="columns",
+        )
+
+        bucketed_path = Path(args.bucket)
+        bucketed_path.parent.mkdir(parents=True, exist_ok=True)
+        df_bucketed_impact.to_csv(bucketed_path, index=False)
 
 
 if __name__ == "__main__":
