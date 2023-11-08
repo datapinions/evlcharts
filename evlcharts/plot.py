@@ -68,6 +68,7 @@ def plot_impact_chars(
 ):
     X = df[list(x_cols)]
     y = df[y_col]
+    w = df[var.VARIABLE_TOTAL_RENTERS]
 
     if linreg:
         reg_linreg = _linreg_from_coefficients(linreg_coefs, linreg_intercept)
@@ -78,7 +79,7 @@ def plot_impact_chars(
     impact_model = XGBoostImpactModel(
         ensemble_size=k, random_state=seed, estimator_kwargs=params
     )
-    impact_model.fit(X, y)
+    impact_model.fit(X, y, sample_weight=w)
     impact_charts = impact_model.impact_charts(
         X,
         X.columns,
