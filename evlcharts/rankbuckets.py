@@ -13,26 +13,29 @@ def load_county(county_path: Path) -> pd.DataFrame:
 
     logger.info(f"Processing county {county_fips}")
 
-    df = pd.read_csv(county_path).reset_index().rename({"index": 'DECILE'}, axis="columns")
-    df['COUNTY'] = county_fips
+    df = (
+        pd.read_csv(county_path)
+        .reset_index()
+        .rename({"index": "DECILE"}, axis="columns")
+    )
+    df["COUNTY"] = county_fips
 
-    feature_cols = [col for col in df.columns if col not in ['COUNTY', 'DECILE']]
-    df = df[['COUNTY', 'DECILE'] + feature_cols]
+    feature_cols = [col for col in df.columns if col not in ["COUNTY", "DECILE"]]
+    df = df[["COUNTY", "DECILE"] + feature_cols]
 
     return df
 
 
 def large_impact(df: pd.DataFrame) -> pd.DataFrame:
+    feature_cols = [col for col in df.columns if col not in ["COUNTY", "DECILE"]]
 
-    feature_cols = [col for col in df.columns if col not in ['COUNTY', 'DECILE']]
-
-    df_high = df.groupby('COUNTY')[feature_cols].max()
-    df_low = df.groupby('COUNTY')[feature_cols].min()
+    df_high = df.groupby("COUNTY")[feature_cols].max()
+    df_low = df.groupby("COUNTY")[feature_cols].min()
     df_gap = df_high - df_low
 
-    print(df_gap.nlargest(10, 'B25119_003E_2018'))
-    print(df_gap.nlargest(10, 'frac_B25003A_003E'))
-    print(df_gap.nlargest(10, 'frac_B25003B_003E'))
+    print(df_gap.nlargest(10, "B25119_003E_2018"))
+    print(df_gap.nlargest(10, "frac_B25003A_003E"))
+    print(df_gap.nlargest(10, "frac_B25003B_003E"))
 
 
 def main():
@@ -52,7 +55,7 @@ def main():
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     # df_large = large_impact(df_all_counties)
-    # df_all_counties.to_csv(output_path, index=False)
+    df_all_counties.to_csv(output_path, index=False)
 
 
 if __name__ == "__main__":

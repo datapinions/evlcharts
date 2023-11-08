@@ -5,7 +5,6 @@ from typing import Iterable, Optional
 
 import numpy as np
 import pandas as pd
-import xgboost
 import yaml
 from impactchart.model import XGBoostImpactModel
 from matplotlib.ticker import FuncFormatter, PercentFormatter
