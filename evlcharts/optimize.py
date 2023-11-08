@@ -46,7 +46,10 @@ def optimize(
     X = df[list(x_cols)]
     y = df[y_col]
 
-    reg.fit(X, y)
+    if w_col is not None:
+        reg.fit(X, y, sample_weight=df[w_col])
+    else:
+        reg.fit(X, y)
 
     result = {
         "params": reg.best_params_,
@@ -135,6 +138,9 @@ def main():
 
     y_col = args.y_column
 
+    # Weigh by total renters.
+    w_col = var.VARIABLE_TOTAL_RENTERS
+
     logger.info(f"Input shape: {df.shape}")
     df = df.dropna(subset=[y_col])
     logger.info(f"Shape after dropna: {df.shape}")
@@ -150,7 +156,7 @@ def main():
     if args.dry_run:
         return
 
-    xgb_params = optimize(df, x_cols, y_col)
+    xgb_params = optimize(df, x_cols, y_col, w_col=w_col)
 
     logger.info(f"Writing to output file `{output_path}`")
     output_path.parent.mkdir(parents=True, exist_ok=True)
