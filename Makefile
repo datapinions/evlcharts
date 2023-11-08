@@ -78,7 +78,8 @@ PARAMS_YAML := $(FIPS:%=$(PARAMS_DIR)/xgb-params-%.yaml)
 TOP_SCORING := $(PARAMS_DIR)/top_scores-$(POPULATION)-$(PREDICTION_Y).csv
 
 # Plots
-PLOT_DIR := ./plots/$(POPULATION)/$(PREDICTION_Y)
+PLOT_ROOT := ./plots
+PLOT_DIR := $(PLOT_ROOT)/$(POPULATION)/$(PREDICTION_Y)
 COUNTY_PLOT_DIRS = $(FIPS:%=$(PLOT_DIR)/%)
 
 # Bucketed impact dirs
@@ -110,7 +111,7 @@ data: $(COUNTY_DATA)
 params: $(PARAMS_YAML)
 
 clean:
-	rm -rf $(WORKING_DIR) $(PLOT_DIR)
+	-rm -rf $(WORKING_DIR) $(PLOT_ROOT)
 
 top: $(TOP_SCORING)
 

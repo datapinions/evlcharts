@@ -17,30 +17,6 @@ from evlcharts.loggingargparser import LoggingArgumentParser
 logger = logging.getLogger(__name__)
 
 
-def xgb_score(df, x_cols, y_col, params) -> float:
-    X = df[list(x_cols)]
-    y = df[y_col]
-
-    reg_xgb = xgboost.XGBRegressor(**params)
-
-    model = reg_xgb.fit(X, y)
-
-    score = model.score(X, y)
-
-    return float(score)
-
-
-def linreg_score(df, x_cols, y_col, coef, intercept) -> float:
-    X = df[list(x_cols)]
-    y = df[y_col]
-
-    reg_linreg = _linreg_from_coefficients(coef, intercept)
-
-    score = reg_linreg.score(X, y)
-
-    return float(score)
-
-
 def _linreg_from_coefficients(coef, intercept):
     reg_linreg = LinearRegression()
     # Instead of fitting, we are just going to kludge in
@@ -209,18 +185,6 @@ def main():
     y_col = args.y_column
 
     df = df.dropna(subset=list(x_cols + [y_col]))
-
-    score_linreg = linreg_score(
-        df,
-        x_cols,
-        y_col,
-        result["linreg"]["coefficients"],
-        result["linreg"]["intercept"],
-    )
-    score_xgb = xgb_score(df, x_cols, y_col, xgb_params)
-
-    logger.info(f"Linreg score: {score_linreg}")
-    logger.info(f"Xgb score: {score_xgb}")
 
     output_path.mkdir(parents=True, exist_ok=True)
 
