@@ -226,6 +226,7 @@ def main():
 
     X = df[list(x_cols)]
     y = df[y_col]
+    w = df[var.VARIABLE_TOTAL_RENTERS]
 
     k = 50
     seed = 0x3423CDF1
@@ -233,7 +234,7 @@ def main():
     impact_model = XGBoostImpactModel(
         ensemble_size=k, random_state=seed, estimator_kwargs=xgb_params
     )
-    impact_model.fit(X, y)
+    impact_model.fit(X, y, sample_weight=w)
 
     plot_impact_chars(
         impact_model,

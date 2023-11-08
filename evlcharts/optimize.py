@@ -47,14 +47,16 @@ def optimize(
     y = df[y_col]
 
     if w_col is not None:
-        reg.fit(X, y, sample_weight=df[w_col])
+        w = df[w_col]
     else:
-        reg.fit(X, y)
+        w = None
+
+    reg.fit(X, y, sample_weight=w)
 
     result = {
         "params": reg.best_params_,
         "target": float(reg.best_score_),
-        "score": float(reg.best_estimator_.score(X, y)),
+        "score": float(reg.best_estimator_.score(X, y, sample_weight=w)),
     }
 
     result["params"]["learning_rate"] = float(result["params"]["learning_rate"])
