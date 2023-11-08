@@ -78,8 +78,13 @@ PARAMS_YAML := $(FIPS:%=$(PARAMS_DIR)/xgb-params-%.yaml)
 TOP_SCORING := $(PARAMS_DIR)/top_scores-$(POPULATION)-$(PREDICTION_Y).csv
 
 # Plots
-PLOT_DIR := ./plots/$(POPULATION)/$(PREDICTION_Y)
+PLOT_ROOT := ./plots
+PLOT_DIR := $(PLOT_ROOT)/$(POPULATION)/$(PREDICTION_Y)
 COUNTY_PLOT_DIRS = $(FIPS:%=$(PLOT_DIR)/%)
+
+# Bucketed impact dirs
+BUCKETED_IMPACT_DIR := $(WORKING_DIR)/$(POPULATION)/$(PREDICTION_Y)/impact_buckets/xgb
+COUNTY_IMPACT_BUCKETS := $(FIPS:%=$(BUCKETED_IMPACT_DIR)/%.csv)
 
 # Coverage maps.
 COVERAGE_MAPS_DIR := $(WORKING_DIR)/maps/$(PREDICTION_Y)
@@ -97,7 +102,7 @@ HTML_NAMES := index.html
 SITE_HTML := $(HTML_NAMES:%=$(SITE_DIR)/%)
 HTML_TEMPLATES := $(HTML_NAMES:%.html=$(HTML_TEMPLATE_DIR)/%.html.j2)
 
-.PHONY: all top site_html check_site data params maps clean
+.PHONY: all top site_html check_site data params maps plots impact_buckets clean
 
 all: $(COUNTY_PLOT_DIRS) $(TOP_SCORING)
 
@@ -106,7 +111,7 @@ data: $(COUNTY_DATA)
 params: $(PARAMS_YAML)
 
 clean:
-	rm -rf $(WORKING_DIR) $(PLOT_DIR)
+	-rm -rf $(WORKING_DIR) $(PLOT_ROOT)
 
 top: $(TOP_SCORING)
 
@@ -119,9 +124,19 @@ $(PARAMS_DIR)/xgb-params-%.yaml: $(WORKING_DATA_DIR)/%.csv
 $(TOP_SCORING): $(PARAMS_YAML)
 	$(PYTHON) -m evlcharts.topscore --log $(LOGLEVEL) -o $@ $(PARAMS_YAML)
 
-$(PLOT_DIR)/%: $(WORKING_DATA_DIR)/%.csv $(PARAMS_DIR)/xgb-params-%.yaml
-	$(PYTHON) -m evlcharts.plot --log $(LOGLEVEL) --population $(POPULATION) -y $(PREDICTION_Y) -o $@ -p $(word 2,$^) --fips $(basename $(notdir $(word 1,$^))) $(word 1,$^)
+$(PLOT_DIR)/% $(BUCKETED_IMPACT_DIR)/%.csv &: $(WORKING_DATA_DIR)/%.csv $(PARAMS_DIR)/xgb-params-%.yaml
+	$(PYTHON) -m evlcharts.plot --log $(LOGLEVEL) --population $(POPULATION) -y $(PREDICTION_Y) \
+    -o $(PLOT_DIR)/$* -p $(word 2,$^) --fips $* \
+    --bucket $(BUCKETED_IMPACT_DIR)/$*.csv \
+    $(word 1,$^)
 	touch $@
+
+plots: $(COUNTY_PLOT_DIRS)
+
+impact_buckets: $(COUNTY_IMPACT_BUCKETS)
+
+$(BUCKETED_IMPACT_DIR)/summary/top.csv: $(COUNTY_IMPACT_BUCKETS)
+	$(PYTHON) -m evlcharts.rankbuckets --log $(LOGLEVEL) -o $@ $^
 
 # Rules to make maps indicating where we have coverage.
 maps: $(COVERAGE_MAPS)
@@ -131,7 +146,7 @@ $(COVERAGE_MAPS_DIR)/%: $(WORKING_DATA_DIR)/%.csv
 	touch $@
 
 # Rules to make the site.
-site_html: $(SITE_HTML) $(SITE_PLOTS) $(SITE_IMAGE_DIR)/impact_charts $(COVERAGE_MAPS) $(SITE_IMAGE_DIR)/coverage_maps
+site_html: $(SITE_HTML) $(SITE_IMAGE_DIR)/impact_charts $(COVERAGE_MAPS) $(SITE_IMAGE_DIR)/coverage_maps
 	cp -r $(STATIC_HTML_DIR)/* $(SITE_DIR)
 
 check_site: site_html
