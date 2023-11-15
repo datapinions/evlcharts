@@ -53,7 +53,7 @@ def main():
 
     by_state = defaultdict(list)
 
-    def _row_dict(row, omit_state: bool=True):
+    def _row_dict(row, omit_state: bool = True):
         row_dict = {
             "name": f"{row.NAME}",
             "fips": row.FIPS,
@@ -61,16 +61,18 @@ def main():
         }
 
         if omit_state:
-            row_dict['name'] = row_dict['name'].split(',')[0]
+            row_dict["name"] = row_dict["name"].split(",")[0]
 
         return row_dict
 
     top_scores = [
-        _row_dict(row, omit_state=False) for row in df_all.nlargest(25, 'SCORE').itertuples()
+        _row_dict(row, omit_state=False)
+        for row in df_all.nlargest(25, "SCORE").itertuples()
     ]
 
     bottom_scores = [
-        _row_dict(row, omit_state=False) for row in df_all[df_all['SCORE'] <= 0.0].sort_values(by='SCORE').itertuples()
+        _row_dict(row, omit_state=False)
+        for row in df_all[df_all["SCORE"] <= 0.0].sort_values(by="SCORE").itertuples()
     ]
 
     for row in df_all.itertuples():
