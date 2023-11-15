@@ -18,8 +18,8 @@ def main():
         "-o", "--output-file", required=True, help="Output file for results."
     )
     parser.add_argument(
-        "-t",
-        "--top-n-file",
+        "-c",
+        "--county-file",
         required=True,
         help="Top n list file we should render into template file.",
     )
@@ -31,39 +31,55 @@ def main():
     args = parser.parse_args()
 
     logger.info(f"Reading template from {args.template_file}")
-    logger.info(f"Reading top n data from {args.top_n_file}")
+    logger.info(f"Reading sorted county score data from {args.county_file}")
 
-    df_top = pd.read_csv(args.top_n_file, dtype={"FIPS": str}).sort_values(
+    df_all = pd.read_csv(args.county_file, dtype={"FIPS": str}).sort_values(
         by="SCORE", ascending=False
     )
 
     if args.limit is not None:
-        df_top = df_top.iloc[: args.limit]
+        df_all = df_all.iloc[: args.limit]
 
-    df_top["NAME"] = df_top["FIPS"].apply(lambda cofips: var.cofips_name(cofips, 2018))
+    df_all["NAME"] = df_all["FIPS"].apply(lambda cofips: var.cofips_name(cofips, 2018))
 
-    df_top["STATE"] = df_top["NAME"].apply(
+    df_all["STATE"] = df_all["NAME"].apply(
         lambda county_state: county_state.split(",")[-1].strip()
     )
-    df_top["COUNTY"] = df_top["NAME"].apply(
+    df_all["COUNTY"] = df_all["NAME"].apply(
         lambda county_state: county_state.split(",")[0].strip()
     )
 
-    df_top.sort_values(by=["STATE", "COUNTY"], inplace=True)
+    df_all.sort_values(by=["STATE", "COUNTY"], inplace=True)
 
-    top_n_by_state = defaultdict(list)
+    by_state = defaultdict(list)
 
-    for row in df_top.itertuples():
-        top_n_by_state[row.STATE].append(
-            {
-                "name": row.COUNTY,
-                "image": f"./images/impact_charts/{row.FIPS}",
-                "r2": f"{row.SCORE:.2f}",
-            }
-        )
+    def _row_dict(row, omit_state: bool=True):
+        row_dict = {
+            "name": f"{row.NAME}",
+            "fips": row.FIPS,
+            "r2": f"{row.SCORE:.2f}",
+        }
+
+        if omit_state:
+            row_dict['name'] = row_dict['name'].split(',')[0]
+
+        return row_dict
+
+    top_scores = [
+        _row_dict(row, omit_state=False) for row in df_all.nlargest(25, 'SCORE').itertuples()
+    ]
+
+    bottom_scores = [
+        _row_dict(row, omit_state=False) for row in df_all[df_all['SCORE'] <= 0.0].sort_values(by='SCORE').itertuples()
+    ]
+
+    for row in df_all.itertuples():
+        by_state[row.STATE].append(_row_dict(row))
 
     template_args = dict(
-        top_n=top_n_by_state,
+        top_scores=top_scores,
+        bottom_scores=bottom_scores,
+        by_state=by_state,
         map_years=(2009, 2019),  # will use in range() in the template.
     )
 

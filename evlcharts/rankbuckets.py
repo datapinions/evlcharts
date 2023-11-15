@@ -33,9 +33,31 @@ def large_impact(df: pd.DataFrame) -> pd.DataFrame:
     df_low = df.groupby("COUNTY")[feature_cols].min()
     df_gap = df_high - df_low
 
-    print(df_gap.nlargest(10, "B25119_003E_2018"))
-    print(df_gap.nlargest(10, "frac_B25003A_003E"))
-    print(df_gap.nlargest(10, "frac_B25003B_003E"))
+    feature_cols_x = [
+        "B25119_003E_2018",
+        "frac_B25003A_003E",
+        "frac_B25003B_003E"
+    ]
+
+    df_large = pd.concat(
+        df_gap[df_gap[feature] > 5.0].nlargest(10, feature)
+        for feature in feature_cols
+    )
+
+    large_fips = sorted(list(df_large.index.unique()))
+
+    print(", ".join(large_fips))
+
+    if False:
+        print("LARGEST")
+        print(df_gap.nlargest(10, "B25119_003E_2018"))
+        print(df_gap.nlargest(10, "frac_B25003A_003E"))
+        print(df_gap.nlargest(10, "frac_B25003B_003E"))
+
+        print("SMALLEST")
+        print(df_gap.nsmallest(10, "B25119_003E_2018"))
+        print(df_gap.nsmallest(10, "frac_B25003A_003E"))
+        print(df_gap.nsmallest(10, "frac_B25003B_003E"))
 
 
 def main():
@@ -54,7 +76,7 @@ def main():
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # df_large = large_impact(df_all_counties)
+    df_large = large_impact(df_all_counties)
     df_all_counties.to_csv(output_path, index=False)
 
 
