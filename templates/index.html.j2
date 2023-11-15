@@ -6,6 +6,8 @@
 
     <link rel="stylesheet" href="./css/evlchart.css">
 
+    <title>Impact of Demographics and Income on Eviction</title>
+
     <link rel="icon" href="./favicon512.png" sizes="512x512" />
     <link rel="icon" href="./favicon192.png" sizes="192x192" />
     <link rel="icon" href="./favicon32.png" sizes="32x32" />
@@ -52,7 +54,7 @@
 
         plausible('Update', {props: {cofips: cofips_text, feature: feature_text}});
 
-        const img_src = cofips + '/' + feature;
+        const img_src = './images/impact_charts/' + cofips + '/' + feature + '.png';
 
         document.getElementById("plot").src = img_src;
 
@@ -68,12 +70,10 @@
         paragraphs0.forEach(unfade);
         paragraphs1.forEach(unfade);
 
-        const cofips_id = cofips.substring(cofips.lastIndexOf('/') + 1)
-
         for (let year = {{map_years[0]}}; year < {{map_years[1]}}; year++) {
 
             var map_img = document.createElement("img");
-            map_img.src = "./images/coverage_maps/" + cofips_id + '/' + year + ".png";
+            map_img.src = "./images/coverage_maps/" + cofips + '/' + year + ".png";
 
             var parent = document.getElementById("coverage" + year);
 
@@ -85,6 +85,17 @@
 
         var all_coverage = document.getElementById("allcoverage")
         all_coverage.style.display = "block";
+
+        // Update the URL.
+
+        const url = window.location.href;
+        const baseUrl = url.split('?')[0];
+
+        const newUrl = `${baseUrl}?&c=${cofips}&f=${feature}`;
+        const newTitle = window.title;
+        const newState = { additionalInformation: `Selected ${cofips} ${feature}` };
+
+        window.history.replaceState(newState, newTitle, newUrl);
     }
   </script>
 
@@ -106,11 +117,21 @@
   <div id="selections">
     <p>Please select the county you are interested in:</p>
     <select name="cofips" id="cofips" onchange="onChangeSelect()">
-      <option value="" disabled="true" selected="true">-</option>
-      {%- for state, counties in top_n.items() %}
+      <option value="" disabled="true" selected="true">Select a County...</option>
+      <optgroup label="Most Predictive Models">
+        {%- for county in top_scores %}
+            <option value="{{county['fips']}}">{{county['name']}} (r² = {{county['r2']}})</option>
+        {% endfor %}
+      </optgroup>
+      <optgroup label="Least Predictive Models">
+        {%- for county in bottom_scores %}
+            <option value="{{county['fips']}}">{{county['name']}} (r² = {{county['r2']}})</option>
+        {% endfor %}
+      </optgroup>
+      {%- for state, counties in by_state.items() %}
         <optgroup label="{{state}}">
           {%- for county in counties %}
-            <option value="{{county['image']}}">{{county['name']}} (r² = {{county['r2']}})</option>
+            <option value="{{county['fips']}}">{{county['name']}} (r² = {{county['r2']}})</option>
           {% endfor %}
       {% endfor %}
     </select>
@@ -119,31 +140,31 @@
     <select name="feature" id="feature" onchange="onChangeSelect()">
         <option value="" disabled="true" selected="true">-</option>
         <optgroup label="Race/Ethicity">
-            <option value="White-Alone-as-Percentage-of-Renters.png">
+            <option value="White-Alone-as-Percentage-of-Renters">
             White Alone
             </option>
-            <option value="Black-Alone-as-Percentage-of-Renters.png">
+            <option value="Black-Alone-as-Percentage-of-Renters">
             Black Alone
             </option>
             <option value="American-Indian-or-Alaskan-Native-Alone-as-Percentage-of-Renters.png ">
             American Indian and Alaska Native Alone
             </option>
-            <option value="Native-Hawaiian-or-Other-Pacific-Islander-Alone-as-Percentage-of-Renters.png">
+            <option value="Native-Hawaiian-or-Other-Pacific-Islander-Alone-as-Percentage-of-Renters">
             Native Hawaiian or Other Pacific Islander alone
             </option>
-            <option value="Asian-Alone-as-Percentage-of-Renters.png">
+            <option value="Asian-Alone-as-Percentage-of-Renters">
             Asian Alone
             </option>
-            <option value="Hispanic-or-Latino-of-any-Race-as-Percentage-of-Renters.png">
+            <option value="Hispanic-or-Latino-of-any-Race-as-Percentage-of-Renters">
             Hispanic or Latino of any Race
             </option>
-            <option value="Some-other-race-Alone-as-Percentage-of-Renters.png">
+            <option value="Some-other-race-Alone-as-Percentage-of-Renters">
             Some other race Alone
             </option>
-            <option value="Two-races-Excluding-Some-Other-Race,-or-Three-or-More-Races-as-Percentage-of-Renters.png">
+            <option value="Two-races-Excluding-Some-Other-Race,-or-Three-or-More-Races-as-Percentage-of-Renters">
             Two or more races Two races excluding Some other race, or three or more races
             </option>
-            <option value="Two-races-Including-Some-Other-Race-as-Percentage-of-Renters.png">
+            <option value="Two-races-Including-Some-Other-Race-as-Percentage-of-Renters">
             Two or more races Two races including Some other race
             </option>
         </optgroup>
@@ -191,4 +212,32 @@
       </div>
     </div>
   </div>
+
+   <script>
+    // Does the URL tell us what is selected?
+    const url = window.location.href;
+    if (url.includes('?')) {
+        var setCount = 0;
+        for (var assignment of url.split('?')[1].split('&')) {
+            const split = assignment.split('=');
+            if (split.length == 2) {
+				if (split[0] === 'c') {
+				    var element = document.getElementById('cofips');
+				    element.value = split[1];
+				    setCount = setCount + 1;
+				}
+				if (split[0] === 'f') {
+				    var element = document.getElementById('feature');
+				    element.value = split[1];
+				    setCount = setCount + 1;
+				}
+            }
+        }
+
+        if (setCount === 2) {
+            onUpdate();
+		}
+    }
+  </script>
+
 </body>
