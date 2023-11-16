@@ -18,5 +18,8 @@ gmake -j 8 maps
 # Top scoring
 gmake top
 
+# County names
+gmake county_names
+
 # Make and check the site.
 gmake check_site
