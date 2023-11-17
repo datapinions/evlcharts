@@ -113,6 +113,9 @@ PARAMS_YAML := $(FIPS:%=$(PARAMS_DIR)/xgb-params-%.yaml)
 # File listing the FIPS codes with the top scores.
 SORTED_SCORING := $(PARAMS_DIR)/sorted_scores-$(POPULATION)-$(PREDICTION_Y).csv
 
+# County name lookup.
+COUNTY_NAMES := $(WORKING_DATA_DIR)/county_names.csv
+
 # Plots
 PLOT_ROOT := ./plots
 PLOT_DIR := $(PLOT_ROOT)/$(POPULATION)/$(PREDICTION_Y)
@@ -138,7 +141,7 @@ HTML_NAMES := index.html
 SITE_HTML := $(HTML_NAMES:%=$(SITE_DIR)/%)
 HTML_TEMPLATES := $(HTML_NAMES:%.html=$(HTML_TEMPLATE_DIR)/%.html.j2)
 
-.PHONY: all top site_html check_site data params maps plots impact_buckets rank_buckets clean
+.PHONY: all top site_html check_site data params maps plots impact_buckets rank_buckets county_names clean
 
 all: $(COUNTY_PLOT_DIRS) $(SORTED_SCORING)
 
@@ -183,6 +186,11 @@ $(COVERAGE_MAPS_DIR)/%: $(WORKING_DATA_DIR)/%.csv
 	$(PYTHON) -m evlcharts.maps --fips $(@F) -y $(PREDICTION_Y) -o $@ $<
 	touch $@
 
+county_names: $(COUNTY_NAMES)
+
+$(COUNTY_NAMES):
+	$(PYTHON) -m evlcharts.countynames --log $(LOGLEVEL) -o $@ $(BASE_FIPS)
+
 # Rules to make the site.
 site_html: $(SITE_HTML) $(SITE_IMAGE_DIR)/impact_charts $(COVERAGE_MAPS) $(SITE_IMAGE_DIR)/coverage_maps
 	cp -r $(STATIC_HTML_DIR)/* $(SITE_DIR)
@@ -200,9 +208,9 @@ $(SITE_IMAGE_DIR)/coverage_maps: $(COVERAGE_MAPS_DIR)
 	cp -r $< $@
 
 # How to render and HTML template for the site.
-$(SITE_DIR)/%.html: $(HTML_TEMPLATE_DIR)/%.html.j2
+$(SITE_DIR)/%.html: $(HTML_TEMPLATE_DIR)/%.html.j2 $(COUNTY_NAMES)
 	mkdir -p $(@D)
-	$(PYTHON) -m evlcharts.rendersite --log $(LOGLEVEL) -c $(SORTED_SCORING) -o $@ $<
+	$(PYTHON) -m evlcharts.rendersite --log $(LOGLEVEL) -c $(SORTED_SCORING) -n $(COUNTY_NAMES) -o $@ $<
 
 # A rule to make requirements.txt. Not part of the normal data build
 # process, but useful for maintenance if we add or update dependencies.

@@ -5,7 +5,6 @@ from pathlib import Path
 import jinja2
 import pandas as pd
 
-import evlcharts.variables as var
 from evlcharts.loggingargparser import LoggingArgumentParser
 
 logger = logging.getLogger(__name__)
@@ -24,6 +23,13 @@ def main():
         help="Top n list file we should render into template file.",
     )
     parser.add_argument(
+        "-n",
+        "--names",
+        type=str,
+        required=True,
+        help="File with a map from cofips to names. Produced byy countynames.py.",
+    )
+    parser.add_argument(
         "-l", "--limit", type=int, help="Limit output to only this many counties."
     )
     parser.add_argument("template_file", help="Template file.")
@@ -33,14 +39,16 @@ def main():
     logger.info(f"Reading template from {args.template_file}")
     logger.info(f"Reading sorted county score data from {args.county_file}")
 
-    df_all = pd.read_csv(args.county_file, dtype={"FIPS": str}).sort_values(
-        by="SCORE", ascending=False
-    )
+    df_all = pd.read_csv(args.county_file, dtype={"FIPS": str})
 
     if args.limit is not None:
         df_all = df_all.iloc[: args.limit]
 
-    df_all["NAME"] = df_all["FIPS"].apply(lambda cofips: var.cofips_name(cofips, 2018))
+    df_county_names = pd.read_csv(args.names, dtype={"FIPS": str})
+
+    df_all = df_all.merge(df_county_names, on=["FIPS"]).sort_values(
+        by="SCORE", ascending=False
+    )
 
     df_all["STATE"] = df_all["NAME"].apply(
         lambda county_state: county_state.split(",")[-1].strip()

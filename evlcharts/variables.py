@@ -13,19 +13,14 @@ TOTAL_HISPANIC_OR_LATINO = "B03002_012E"
 GROUP_TENURE_PREFIX = "B25003"
 VARIABLE_TOTAL_RENTERS = "B25003_003E"
 
-# The counts of renters by race and ethicity are in different groups,
+# The counts of renters by race and ethnicity are in different groups,
 # one per ethnicity.
 GROUP_TENURE_WHITE = "B25003A"
 GROUP_TENURE_BLACK = "B25003B"
 GROUP_TENURE_ASIAN = "B25003D"
+GROUP_TENURE_TWO_OR_MORE_RACES = "B25003G"
+GROUP_TENURE_WHITE_NOT_HISPANIC = "B25003H"
 GROUP_TENURE_HISPANIC_LATINO = "B25003I"
-
-TENURE_BY_RACE_GROUPS = [
-    GROUP_TENURE_WHITE,
-    GROUP_TENURE_BLACK,
-    GROUP_TENURE_ASIAN,
-    GROUP_TENURE_HISPANIC_LATINO,
-]
 
 # From income by tenure group https://api.census.gov/data/2018/acs/acs5/groups/B25119.html
 MEDIAN_HOUSEHOLD_INCOME_FOR_RENTERS = "B25119_003E"
@@ -38,6 +33,7 @@ MEDIAN_HOUSEHOLD_INCOME_FOR_RENTERS_2018_USD = (
 
 # Names of all of the features to use in labels on plots.
 FEATURE_NAMES = {
+    # Full population
     "frac_B03002_003E": "White Alone as Percentage of Overall Population",
     "frac_B03002_004E": "Black Alone as Percentage of Overall Population",
     "frac_B03002_005E": "American Indian or Alaskan Native Alone as Percentage of Overall Population",
@@ -48,15 +44,16 @@ FEATURE_NAMES = {
     "frac_B03002_011E": "Two races Excluding Some Other Race, or Three or More Races "
     "as Percentage of Overall Population",
     "frac_B03002_012E": "Hispanic or Latino of Any Race as Percentage of Overall Population",
+    # Renters
     "frac_B25003A_003E": "White Alone as Percentage of Renters",
     "frac_B25003B_003E": "Black Alone as Percentage of Renters",
     "frac_B25003C_003E": "American Indian or Alaskan Native Alone as Percentage of Renters",
     "frac_B25003D_003E": "Asian Alone as Percentage of Renters",
     "frac_B25003E_003E": "Native Hawaiian or Other Pacific Islander Alone as Percentage of Renters",
     "frac_B25003F_003E": "Some Other Race Alone as Percentage of Renters",
-    "frac_B25003G_003E": "Two races Including Some Other Race as Percentage of Renters",
-    "frac_B25003H_003E": "Two races Excluding Some Other Race, or Three or More Races as Percentage of Renters",
-    "frac_B25003I_003E": "Hispanic or Latino of any Race as Percentage of Renters",
+    "frac_B25003G_003E": "Two or More Races as Percentage of Renters",
+    "frac_B25003H_003E": "White Alone not Hispanic or Latino as Percentage of Renters",
+    "frac_B25003I_003E": "Hispanic or Latino as Percentage of Renters",
     MEDIAN_HOUSEHOLD_INCOME_FOR_RENTERS_2018_USD: "Median Household Income for Renters - 2018 Dollars",
 }
 
